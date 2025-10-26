@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>등속원운동 시뮬레이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .diagram {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .problem-text {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+        
+        .values {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .question {
+            font-weight: bold;
+            color: #495057;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .options {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        .option:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .check-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .check-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .new-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .new-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+        
+        .solution {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            line-height: 1.6;
+        }
+        
+        .solution.show {
+            display: block;
+        }
+        
+        .solution-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ 등속원운동 문제</h1>
+        
+        <div class="diagram">
+            <canvas id="canvas" width="350" height="400"></canvas>
+        </div>
+        
+        <div class="problem-text">
+            <p>그림과 같이 물체 A와 실로 연결된 물체 B가 마찰이 없는 수평면에서 반지름이 <strong id="radius">0.4</strong>m인 원궤도를 따라 <strong id="velocity">2</strong>m/s의 속력으로 등속 원운동을 한다.</p>
+            <div class="values">
+                B의 질량: <strong id="massB">1</strong>kg<br>
+                중력 가속도: <strong>10</strong>m/s²
+            </div>
+            <div class="question">A의 질량은? (단, 물체의 크기, 실의 질량은 무시한다.)</div>
+        </div>
+        
+        <div class="options" id="options"></div>
+        
+        <div class="buttons">
+            <button class="check-btn" onclick="checkAnswer()">정답 확인</button>
+            <button class="new-btn" onclick="newProblem()">새 문제</button>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div class="solution" id="solution">
+            <div class="solution-title">💡 풀이</div>
+            <div id="solutionText"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentProblem = {};
+        let selectedAnswer = null;
+        let answered = false;
+        let angle = 0;
+        
+        function drawDiagram() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const tableTopY = 250;
+            const tableWidth = 200;
+            const tableDepth = 1000;
+            const tableThickness = 15;
+            const persp = 30;
+            
+            // 책상 상판 윗면 (위에서 본 큰 직사각형 280x300)
+            ctx.fillStyle = '#e0e0e0';
+            ctx.beginPath();
+            ctx.moveTo(centerX - tableWidth/2, tableTopY - tableDepth/2 + tableDepth/2);
+            ctx.lineTo(centerX - tableWidth/2 + persp, tableTopY - tableDepth/2 + tableDepth/2 - persp);
+            ctx.lineTo(centerX + tableWidth/2 + persp, tableTopY - tableDepth/2 + tableDepth/2 - persp);
+            ctx.lineTo(centerX + tableWidth/2, tableTopY - tableDepth/2 + tableDepth/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 책상 오른쪽 측면
+            ctx.fillStyle = '#b0b0b0';
+            ctx.beginPath();
+            ctx.moveTo(centerX + tableWidth/2, tableTopY - tableDepth/2 + tableDepth/2);
+            ctx.lineTo(centerX + tableWidth/2 + persp, tableTopY - tableDepth/2 + tableDepth/2 - persp);
+            ctx.lineTo(centerX + tableWidth/2 + persp, tableTopY - tableDepth/2 + tableDepth/2 + tableThickness - persp);
+            ctx.lineTo(centerX + tableWidth/2, tableTopY - tableDepth/2 + tableDepth/2 + tableThickness);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 책상 상판 정면 (얇은 판)
+            ctx.fillStyle = '#d0d0d0';
+            ctx.fillRect(centerX - tableWidth/2, tableTopY - tableDepth/2 + tableDepth/2, tableWidth, tableThickness);
+            ctx.strokeStyle = '#777';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(centerX - tableWidth/2, tableTopY - tableDepth/2 + tableDepth/2, tableWidth, tableThickness);
+            
+            // 책상 표면 중심 (윗면 위에)
+            const surfaceX = centerX;
+            const surfaceY = tableTopY - tableDepth/2 + tableDepth/2 - persp/2;
+            
+            // 중심 구멍
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.ellipse(surfaceX, surfaceY, 5, 3, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 원궤도 (책상 위)
+            const orbitRX = 65;
+            const orbitRY = 48;
+            
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = '#4a90e2';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(surfaceX, surfaceY, orbitRX, orbitRY, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 반지름
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(surfaceX, surfaceY);
+            ctx.lineTo(surfaceX + orbitRX, surfaceY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#555';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('r', surfaceX + orbitRX/2, surfaceY - 7);
+            
+            // 물체 B (책상 표면 위)
+            angle += 0.025;
+            const bX = surfaceX + orbitRX * Math.cos(angle);
+            const bY = surfaceY + orbitRY * Math.sin(angle);
+            
+            // B 그림자
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(bX + 1, bY + 1, 13, 9, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 물체 B
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(bX, bY, 13, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = '#4455cc';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('B', bX, bY);
+            
+            // 속도 벡터
+            const vAngle = Math.atan2(orbitRY * Math.cos(angle), -orbitRX * Math.sin(angle));
+            const vLen = 32;
+            const vX = bX + vLen * Math.cos(vAngle);
+            const vY = bY + vLen * Math.sin(vAngle);
+            
+            ctx.strokeStyle = '#ff3333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(bX, bY);
+            ctx.lineTo(vX, vY);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#ff3333';
+            ctx.beginPath();
+            ctx.moveTo(vX, vY);
+            ctx.lineTo(vX - 9*Math.cos(vAngle-0.3), vY - 9*Math.sin(vAngle-0.3));
+            ctx.lineTo(vX - 9*Math.cos(vAngle+0.3), vY - 9*Math.sin(vAngle+0.3));
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText(currentProblem.velocity + 'm/s', vX + 12*Math.cos(vAngle), vY + 12*Math.sin(vAngle));
+            
+            // 책상 다리 4개
+            const legW = 10;
+            const legH = 75;
+            const tableBottomY = tableTopY - tableDepth/2 + tableDepth/2 + tableThickness;
+            ctx.fillStyle = '#666';
+            ctx.fillRect(centerX - tableWidth/2 + 20, tableBottomY, legW, legH);
+            ctx.fillRect(centerX + tableWidth/2 - 30, tableBottomY, legW, legH);
+            ctx.fillRect(centerX - 55, tableBottomY, legW, legH);
+            ctx.fillRect(centerX + 45, tableBottomY, legW, legH);
+            
+            // 실 (구멍에서 아래로)
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(surfaceX, surfaceY + 3);
+            ctx.lineTo(centerX, tableBottomY + legH + 35);
+            ctx.stroke();
+            
+            // 물체 A
+            const aSize = 26;
+            const aX = centerX - aSize/2;
+            const aY = tableBottomY + legH + 35;
+            
+            ctx.fillStyle = '#4caf50';
+            ctx.fillRect(aX, aY, aSize, aSize);
+            ctx.strokeStyle = '#2e7d32';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(aX, aY, aSize, aSize);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 15px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('A', centerX, aY + aSize/2);
+            
+            requestAnimationFrame(drawDiagram);
+        }
+        
+        function generateProblem() {
+            // 문제에서 주는 값들을 정수로 설정
+            const combinations = [
+                { r: 1, v: 2, mB: 1 },      // mA = 0.4
+                { r: 2, v: 4, mB: 2 },      // mA = 1.6
+                { r: 1, v: 3, mB: 2 },      // mA = 1.8
+                { r: 2, v: 2, mB: 1 },      // mA = 0.2
+                { r: 1, v: 4, mB: 1 },      // mA = 1.6
+                { r: 2, v: 6, mB: 1 },      // mA = 1.8
+                { r: 1, v: 2, mB: 2 },      // mA = 0.8
+                { r: 2, v: 4, mB: 1 },      // mA = 0.8
+                { r: 1, v: 5, mB: 1 },      // mA = 2.5
+                { r: 2, v: 2, mB: 2 },      // mA = 0.4
+            ];
+            
+            const selected = combinations[Math.floor(Math.random() * combinations.length)];
+            const r = selected.r;
+            const v = selected.v;
+            const mB = selected.mB;
+            
+            const g = 10;
+            const mA = (mB * v * v) / (r * g);
+            
+            const correctAnswer = Math.round(mA * 10) / 10;
+            const options = [correctAnswer];
+            
+            while (options.length < 5) {
+                const variation = correctAnswer * (0.5 + Math.random() * 1);
+                const option = Math.round(variation * 10) / 10;
+                if (!options.includes(option) && option > 0 && option < 10) {
+                    options.push(option);
+                }
+            }
+            
+            options.sort((a, b) => a - b);
+            
+            currentProblem = {
+                radius: r,
+                velocity: v,
+                massB: mB,
+                massA: correctAnswer,
+                options: options,
+                correctIndex: options.indexOf(correctAnswer)
+            };
+            
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            document.getElementById('radius').textContent = currentProblem.radius;
+            document.getElementById('velocity').textContent = currentProblem.velocity;
+            document.getElementById('massB').textContent = currentProblem.massB;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            currentProblem.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = `${String.fromCharCode(9312 + index)} ${option}kg`;
+                div.onclick = () => selectOption(index);
+                optionsDiv.appendChild(div);
+            });
+        }
+        
+        function selectOption(index) {
+            if (answered) return;
+            
+            selectedAnswer = index;
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === index) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+        
+        function checkAnswer() {
+            if (selectedAnswer === null) {
+                alert('답을 선택해주세요!');
+                return;
+            }
+            
+            if (answered) return;
+            
+            answered = true;
+            const feedback = document.getElementById('feedback');
+            const solution = document.getElementById('solution');
+            const solutionText = document.getElementById('solutionText');
+            const options = document.querySelectorAll('.option');
+            
+            options[currentProblem.correctIndex].classList.add('correct');
+            
+            if (selectedAnswer === currentProblem.correctIndex) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = '✓ 정답입니다!';
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '✗ 틀렸습니다. 다시 생각해보세요!';
+                options[selectedAnswer].classList.add('incorrect');
+            }
+            
+            const r = currentProblem.radius;
+            const v = currentProblem.velocity;
+            const mB = currentProblem.massB;
+            const mA = currentProblem.massA;
+            const T = mB * v * v / r;
+            
+            solutionText.innerHTML = `
+                <p><strong>1단계:</strong> B가 등속 원운동을 하므로 구심력이 작용합니다.</p>
+                <p>구심력 공식: F = m × v² / r</p>
+                <p><strong>2단계:</strong> 이 구심력은 실의 장력 T가 제공합니다.</p>
+                <p>T = m<sub>B</sub> × v² / r = ${mB} × ${v}² / ${r} = ${T.toFixed(1)}N</p>
+                <p><strong>3단계:</strong> 물체 A가 정지해 있으므로 힘의 평형:</p>
+                <p>장력 T = m<sub>A</sub> × g</p>
+                <p>${T.toFixed(1)} = m<sub>A</sub> × 10</p>
+                <p>∴ m<sub>A</sub> = ${T.toFixed(1)} ÷ 10 = <strong>${mA}kg</strong></p>
+            `;
+            
+            solution.classList.add('show');
+        }
+        
+        function newProblem() {
+            selectedAnswer = null;
+            answered = false;
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('solution').classList.remove('show');
+            generateProblem();
+        }
+        
+        generateProblem();
+        drawDiagram();
+    </script>
+</body>
+</html>
