@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>돌림힘 평형 문제 시뮬레이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .problem-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .type-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #666;
+        }
+        
+        .type-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .problem-section {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+        
+        .problem-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .problem-content {
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .diagram {
+            background: #e8e8e8;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .diagram canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .choice-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+            color: #333;
+        }
+        
+        .choice-btn:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+        
+        .choice-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .input-group {
+            margin: 20px 0;
+        }
+        
+        .input-label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .unit {
+            color: #666;
+            font-weight: 500;
+            min-width: 50px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 25px 0;
+        }
+        
+        button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-check {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-check:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-new {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+        
+        .btn-new:active {
+            transform: scale(0.98);
+        }
+        
+        .feedback {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .feedback.show {
+            opacity: 1;
+        }
+        
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            color: #004085;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+        
+        .explanation.show {
+            display: block;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ 돌림힘 평형</h1>
+            <p>Physics 2 - 물체의 평형</p>
+        </div>
+        
+        <div class="problem-type-selector">
+            <button class="type-btn active" onclick="selectProblemType('torque')">돌림힘 계산</button>
+            <button class="type-btn" onclick="selectProblemType('rod')">막대 평형</button>
+        </div>
+        
+        <!-- 돌림힘 문제 -->
+        <div id="torqueProblem">
+            <div class="problem-section">
+                <div class="problem-title">📋 문제</div>
+                <div class="problem-content">
+                    길이 <span id="lengthDisplay">20</span> cm인 렌치를 이용해 <span id="forceDisplay">10</span> N의 힘을 작용하였을 때, 너트에 작용하는 돌림힘의 크기는 몇 N·m인가?
+                </div>
+                
+                <div class="diagram">
+                    <canvas id="torqueCanvas" width="300" height="160"></canvas>
+                </div>
+                
+                <div style="background: white; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                    <strong style="color: #667eea;">돌림힘(토크) = 힘 × 거리</strong>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">답을 입력하세요:</label>
+                <div class="input-wrapper">
+                    <input type="number" id="torqueAnswer" placeholder="예: 2" step="0.1">
+                    <div class="unit">N·m</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 막대 평형 문제 -->
+        <div id="rodProblem" class="hidden">
+            <div class="problem-section">
+                <div class="problem-title">📋 문제</div>
+                <div class="problem-content" id="rodProblemText">
+                </div>
+                
+                <div class="diagram">
+                    <canvas id="rodCanvas" width="300" height="180"></canvas>
+                </div>
+                
+                <div class="problem-content" id="rodQuestion">
+                    W는?
+                </div>
+            </div>
+            
+            <div class="choices" id="rodChoices">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-check" onclick="checkAnswer()">정답 확인</button>
+            <button class="btn-new" onclick="newProblem()">새 문제</button>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        <div class="explanation" id="explanation"></div>
+    </div>
+    
+    <script>
+        let currentProblemType = 'torque';
+        let currentProblem = {};
+        let selectedChoice = null;
+        
+        function selectProblemType(type) {
+            currentProblemType = type;
+            
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('torqueProblem').classList.toggle('hidden', type !== 'torque');
+            document.getElementById('rodProblem').classList.toggle('hidden', type !== 'rod');
+            
+            newProblem();
+        }
+        
+        function generateTorqueProblem() {
+            const length = Math.floor(Math.random() * 21) + 10;
+            const force = Math.floor(Math.random() * 21) + 5;
+            
+            currentProblem = {
+                type: 'torque',
+                length: length,
+                force: force
+            };
+            
+            currentProblem.answer = parseFloat(((length / 100) * force).toFixed(2));
+            
+            document.getElementById('lengthDisplay').textContent = length;
+            document.getElementById('forceDisplay').textContent = force;
+            document.getElementById('torqueAnswer').value = '';
+            
+            drawTorqueDiagram();
+        }
+        
+        function generateRodProblem() {
+            const ratios = [
+                {left: 1, right: 2},
+                {left: 1, right: 3},
+                {left: 1, right: 4},
+                {left: 2, right: 3},
+                {left: 2, right: 5},
+                {left: 3, right: 5}
+            ];
+            const ratio = ratios[Math.floor(Math.random() * ratios.length)];
+            
+            const direction = Math.random() > 0.5 ? 'right' : 'left';
+            const questionType = Math.random() > 0.5 ? 'findW' : 'findWeight';
+            
+            let hangingWeight, cylinderW, correctAnswer;
+            
+            if (questionType === 'findW') {
+                hangingWeight = Math.floor(Math.random() * 80) + 1;
+                cylinderW = Math.round((hangingWeight * ratio.left) / ratio.right);
+                correctAnswer = cylinderW;
+            } else {
+                cylinderW = Math.floor(Math.random() * 80) + 1;
+                hangingWeight = Math.round((cylinderW * ratio.right) / ratio.left);
+                correctAnswer = hangingWeight;
+            }
+            
+            const choices = new Set();
+            choices.add(correctAnswer);
+            
+            while (choices.size < 5) {
+                const offset = Math.floor(Math.random() * 40) - 20;
+                const randomChoice = correctAnswer + offset;
+                if (randomChoice > 0 && randomChoice <= 100) {
+                    choices.add(randomChoice);
+                }
+            }
+            
+            const choicesArray = Array.from(choices).sort((a, b) => a - b);
+            
+            currentProblem = {
+                type: 'rod',
+                displayHangingWeight: hangingWeight,
+                displayCylinderW: cylinderW,
+                ratioLeft: ratio.left,
+                ratioRight: ratio.right,
+                direction: direction,
+                questionType: questionType,
+                correctAnswer: correctAnswer,
+                choices: choicesArray
+            };
+            
+            let rodText;
+            if (questionType === 'findW') {
+                rodText = `그림과 같이 무게가 ${hangingWeight} N인 물체가 균일한 원통형 막대의 ${direction === 'left' ? '왼쪽' : '오른쪽'} 끝에 매달려서 막대가 수평 상태로 정지해 있다.`;
+            } else {
+                rodText = `그림과 같이 무게를 알 수 없는 물체가 균일한 원통형 막대의 ${direction === 'left' ? '왼쪽' : '오른쪽'} 끝에 매달려서 막대가 수평 상태로 정지해 있다. 원통형 막대의 무게 W는 ${cylinderW} N이다.`;
+            }
+            document.getElementById('rodProblemText').textContent = rodText;
+            
+            const questionText = questionType === 'findW' ? 'W는?' : '물체의 무게는?';
+            document.getElementById('rodQuestion').textContent = questionText;
+            
+            const choicesHTML = choicesArray.map((choice, idx) => 
+                `<button class="choice-btn" onclick="selectRodChoice(${choice})">
+                    ${['①', '②', '③', '④', '⑤'][idx]} ${choice} N
+                </button>`
+            ).join('');
+            
+            document.getElementById('rodChoices').innerHTML = choicesHTML;
+            selectedChoice = null;
+            
+            drawRodDiagram();
+        }
+        
+        function selectRodChoice(value) {
+            selectedChoice = value;
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+        
+        function drawTorqueDiagram() {
+            const canvas = document.getElementById('torqueCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const nutX = 50;
+            const nutY = 85;
+            const wrenchEndX = 210;
+            const wrenchEndY = 85;
+            
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            
+            ctx.beginPath();
+            ctx.moveTo(20, nutY);
+            ctx.lineTo(280, nutY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(nutX, 20);
+            ctx.lineTo(nutX, 140);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            ctx.save();
+            ctx.translate(nutX, nutY);
+            
+            ctx.fillStyle = '#808080';
+            ctx.beginPath();
+            ctx.moveTo(-8, -14);
+            ctx.lineTo(8, -14);
+            ctx.lineTo(16, 0);
+            ctx.lineTo(8, 14);
+            ctx.lineTo(-8, 14);
+            ctx.lineTo(-16, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.strokeStyle = '#606060';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#b8b8b8';
+            ctx.beginPath();
+            ctx.moveTo(-6, -12);
+            ctx.lineTo(6, -12);
+            ctx.lineTo(14, 0);
+            ctx.lineTo(6, 12);
+            ctx.lineTo(-6, 12);
+            ctx.lineTo(-14, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.strokeStyle = '#808080';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#4a4a4a';
+            ctx.beginPath();
+            ctx.arc(0, 0, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+            
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(nutX + 18, nutY);
+            ctx.lineTo(wrenchEndX, wrenchEndY);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(nutX, nutY + 35);
+            ctx.lineTo(wrenchEndX, wrenchEndY + 35);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(nutX, nutY + 32);
+            ctx.lineTo(nutX, nutY + 38);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(wrenchEndX, wrenchEndY + 32);
+            ctx.lineTo(wrenchEndX, wrenchEndY + 38);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${currentProblem.length} cm`, (nutX + wrenchEndX) / 2, nutY + 56);
+            
+            const forceStartX = wrenchEndX + 5;
+            const forceStartY = wrenchEndY - 22;
+            const arrowLength = 40;
+            
+            const arrowEndX = forceStartX + arrowLength;
+            const arrowEndY = forceStartY - arrowLength * 0.5;
+            
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(forceStartX, forceStartY);
+            ctx.lineTo(arrowEndX, arrowEndY);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#e74c3c';
+            const arrowAngle = Math.atan2(arrowEndY - forceStartY, arrowEndX - forceStartX);
+            const arrowHeadSize = 10;
+            ctx.beginPath();
+            ctx.moveTo(arrowEndX, arrowEndY);
+            ctx.lineTo(
+                arrowEndX - arrowHeadSize * Math.cos(arrowAngle - Math.PI / 6),
+                arrowEndY - arrowHeadSize * Math.sin(arrowAngle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                arrowEndX - arrowHeadSize * Math.cos(arrowAngle + Math.PI / 6),
+                arrowEndY - arrowHeadSize * Math.sin(arrowAngle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${currentProblem.force} N`, arrowEndX + 8, arrowEndY);
+        }
+        
+        function drawRodDiagram() {
+            const canvas = document.getElementById('rodCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = 150;
+            const centerY = 80; // 70에서 80으로 증가
+            const ratioLeft = currentProblem.ratioLeft;
+            const ratioRight = currentProblem.ratioRight;
+            const totalRatio = ratioLeft + ratioRight;
+            const unitLength = 120 / totalRatio;
+            
+            const rodLength = totalRatio * unitLength;
+            const rodLeft = centerX - rodLength / 2;
+            const rodRight = centerX + rodLength / 2;
+            
+            // 막대 그리기
+            ctx.fillStyle = '#8b7355';
+            ctx.fillRect(rodLeft, centerY - 5, rodLength, 10);
+            
+            ctx.strokeStyle = '#5d4e37';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(rodLeft, centerY - 5, rodLength, 10);
+            
+            // 막대 끝부분 원형 (갈색)
+            ctx.fillStyle = '#8b7355';
+            ctx.beginPath();
+            ctx.arc(rodLeft, centerY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(rodRight, centerY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#5d4e37';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(rodLeft, centerY, 5, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(rodRight, centerY, 5, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            const supportX = rodLeft + ratioLeft * unitLength;
+            
+            // 줄 그리기 (더 길게)
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(supportX, centerY - 5);
+            ctx.lineTo(supportX, 20);
+            ctx.stroke();
+            
+            // 천장 (막대보다 길게)
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(rodLeft - 30, 20);
+            ctx.lineTo(rodRight + 30, 20);
+            ctx.stroke();
+            
+            // 해치 패턴
+            for (let i = rodLeft - 30; i <= rodRight + 30; i += 5) {
+                ctx.beginPath();
+                ctx.moveTo(i, 20);
+                ctx.lineTo(i - 5, 10);
+                ctx.stroke();
+            }
+            
+            // 매달린 물체
+            const hangingX = currentProblem.direction === 'left' ? rodLeft : rodRight;
+            
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(hangingX, centerY + 5);
+            ctx.lineTo(hangingX, centerY + 40);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#a0a0a0';
+            ctx.fillRect(hangingX - 12, centerY + 40, 24, 24);
+            
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(hangingX - 12, centerY + 40, 24, 24);
+            
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            
+            if (currentProblem.questionType === 'findW') {
+                ctx.fillText(`${currentProblem.displayHangingWeight} N`, hangingX, centerY + 55);
+            } else {
+                ctx.font = 'italic bold 16px Arial';
+                ctx.fillText('x', hangingX, centerY + 55);
+            }
+            
+            // 원통 W (반대쪽 끝)
+            const cylinderX = currentProblem.direction === 'left' ? rodRight : rodLeft;
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.beginPath();
+            ctx.ellipse(cylinderX, centerY, 15, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            
+            if (currentProblem.questionType === 'findW') {
+                ctx.fillText('W', cylinderX, centerY + 25);
+            } else {
+                ctx.fillText(`${currentProblem.displayCylinderW} N`, cylinderX, centerY + 25);
+            }
+            
+            // 거리 표시 (막대 위쪽, 천장과 충분히 떨어진 위치)
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([3, 3]);
+            
+            const leftY = centerY - 25; // -20에서 -25로 조정
+            ctx.beginPath();
+            ctx.moveTo(supportX, leftY);
+            ctx.lineTo(hangingX, leftY);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(supportX, leftY - 5);
+            ctx.lineTo(supportX, leftY + 5);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(hangingX, leftY - 5);
+            ctx.lineTo(hangingX, leftY + 5);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px Arial';
+            const leftLabel = currentProblem.direction === 'left' ? 
+                (ratioLeft === 1 ? 'L' : `${ratioLeft}L`) : 
+                (ratioRight === 1 ? 'L' : `${ratioRight}L`);
+            ctx.fillText(leftLabel, (supportX + hangingX) / 2, leftY - 10);
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.setLineDash([3, 3]);
+            
+            const rightY = centerY - 25;
+            ctx.beginPath();
+            ctx.moveTo(supportX, rightY);
+            ctx.lineTo(cylinderX, rightY);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(supportX, rightY - 5);
+            ctx.lineTo(supportX, rightY + 5);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(cylinderX, rightY - 5);
+            ctx.lineTo(cylinderX, rightY + 5);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#667eea';
+            const rightLabel = currentProblem.direction === 'left' ? 
+                (ratioRight === 1 ? 'L' : `${ratioRight}L`) : 
+                (ratioLeft === 1 ? 'L' : `${ratioLeft}L`);
+            ctx.fillText(rightLabel, (supportX + cylinderX) / 2, rightY - 10);
+        }
+        
+        function checkAnswer() {
+            const feedback = document.getElementById('feedback');
+            const explanation = document.getElementById('explanation');
+            
+            if (currentProblemType === 'torque') {
+                const input = document.getElementById('torqueAnswer').value;
+                
+                if (input === '') {
+                    feedback.textContent = '답을 입력해주세요!';
+                    feedback.className = 'feedback show incorrect';
+                    return;
+                }
+                
+                const userAnswer = parseFloat(input);
+                const tolerance = 0.1;
+                const isCorrect = Math.abs(userAnswer - currentProblem.answer) < tolerance;
+                
+                if (isCorrect) {
+                    feedback.textContent = '✓ 정답입니다! 잘했어요!';
+                    feedback.className = 'feedback show correct';
+                    explanation.innerHTML = `
+                        <strong>풀이:</strong><br>
+                        돌림힘 = 힘 × 거리<br>
+                        = ${currentProblem.force} N × ${currentProblem.length / 100} m<br>
+                        = <strong>${currentProblem.answer} N·m</strong>
+                    `;
+                    explanation.classList.add('show');
+                } else {
+                    feedback.textContent = '✗ 다시 생각해보세요.';
+                    feedback.className = 'feedback show incorrect';
+                    explanation.innerHTML = `
+                        <strong style="color: #e74c3c; font-size: 16px;">정답: ${currentProblem.answer} N·m</strong><br><br>
+                        <strong>힌트:</strong><br>
+                        렌치의 길이를 미터(m)로 바꾸고<br>
+                        힘과 거리를 곱해보세요!<br><br>
+                        <strong style="color: #667eea;">풀이:</strong><br>
+                        돌림힘 = ${currentProblem.force} N × ${currentProblem.length / 100} m = ${currentProblem.answer} N·m
+                    `;
+                    explanation.classList.add('show');
+                }
+            } else {
+                if (selectedChoice === null) {
+                    feedback.textContent = '답을 선택해주세요!';
+                    feedback.className = 'feedback show incorrect';
+                    return;
+                }
+                
+                const isCorrect = selectedChoice === currentProblem.correctAnswer;
+                
+                if (isCorrect) {
+                    feedback.textContent = '✓ 정답입니다! 잘했어요!';
+                    feedback.className = 'feedback show correct';
+                    
+                    const leftDist = currentProblem.direction === 'left' ? currentProblem.ratioLeft : currentProblem.ratioRight;
+                    const rightDist = currentProblem.direction === 'left' ? currentProblem.ratioRight : currentProblem.ratioLeft;
+                    
+                    if (currentProblem.questionType === 'findW') {
+                        explanation.innerHTML = `
+                            <strong>풀이:</strong><br>
+                            돌림힘 평형 조건: 지지점을 중심으로 시계방향과 반시계방향 돌림힘이 같아야 합니다.<br>
+                            ${currentProblem.displayHangingWeight} N × ${leftDist}L = W × ${rightDist}L<br>
+                            W = ${currentProblem.displayHangingWeight} × ${leftDist} / ${rightDist}<br>
+                            W = <strong>${currentProblem.correctAnswer} N</strong>
+                        `;
+                    } else {
+                        explanation.innerHTML = `
+                            <strong>풀이:</strong><br>
+                            돌림힘 평형 조건: 지지점을 중심으로 시계방향과 반시계방향 돌림힘이 같아야 합니다.<br>
+                            물체 무게 × ${leftDist}L = ${currentProblem.displayCylinderW} N × ${rightDist}L<br>
+                            물체 무게 = ${currentProblem.displayCylinderW} × ${rightDist} / ${leftDist}<br>
+                            물체 무게 = <strong>${currentProblem.correctAnswer} N</strong>
+                        `;
+                    }
+                    explanation.classList.add('show');
+                } else {
+                    feedback.textContent = '✗ 다시 생각해보세요.';
+                    feedback.className = 'feedback show incorrect';
+                    
+                    const leftDist = currentProblem.direction === 'left' ? currentProblem.ratioLeft : currentProblem.ratioRight;
+                    const rightDist = currentProblem.direction === 'left' ? currentProblem.ratioRight : currentProblem.ratioLeft;
+                    
+                    explanation.innerHTML = `
+                        <strong style="color: #e74c3c; font-size: 16px;">정답: ${currentProblem.correctAnswer} N</strong><br><br>
+                        <strong>힌트:</strong><br>
+                        돌림힘 평형 조건을 생각해보세요!<br>
+                        지지점을 중심으로 양쪽 돌림힘이 같아야 합니다.<br>
+                        거리 비율을 확인하세요!<br><br>
+                        <strong style="color: #667eea;">풀이:</strong><br>
+                        ${currentProblem.questionType === 'findW' ? 
+                            `${currentProblem.displayHangingWeight} N × ${leftDist}L = W × ${rightDist}L<br>W = ${currentProblem.displayHangingWeight} × ${leftDist} / ${rightDist} = ${currentProblem.correctAnswer} N` :
+                            `물체 무게 × ${leftDist}L = ${currentProblem.displayCylinderW} N × ${rightDist}L<br>물체 무게 = ${currentProblem.displayCylinderW} × ${rightDist} / ${leftDist} = ${currentProblem.correctAnswer} N`
+                        }
+                    `;
+                    explanation.classList.add('show');
+                }
+            }
+        }
+        
+        function newProblem() {
+            if (currentProblemType === 'torque') {
+                generateTorqueProblem();
+            } else {
+                generateRodProblem();
+            }
+            
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('explanation').classList.remove('show');
+        }
+        
+        generateTorqueProblem();
+        
+        document.getElementById('torqueAnswer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>

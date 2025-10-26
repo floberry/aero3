@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>등속 원운동 시뮬레이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .problem-section {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 2px solid #667eea;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: white;
+        }
+        .question {
+            font-size: 18px;
+            line-height: 1.8;
+            margin: 20px 0;
+            color: #333;
+        }
+        .options {
+            margin: 20px 0;
+        }
+        .option {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .option.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .option.incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        button {
+            padding: 15px 35px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background: #667eea;
+            color: white;
+        }
+        .submit-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .new-btn {
+            background: #10b981;
+            color: white;
+        }
+        .new-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .result.correct {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .result.incorrect {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .explanation {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #f59e0b;
+            text-align: left;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .info-box {
+            background: #e0e7ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #4338ca;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 등속 원운동 시뮬레이션</h1>
+        
+        <div class="problem-section">
+            <div class="info-box" id="infoBox"></div>
+            
+            <div class="canvas-container">
+                <canvas id="canvas" width="500" height="400"></canvas>
+            </div>
+            
+            <div class="question" id="question"></div>
+            
+            <div class="options" id="options"></div>
+            
+            <div class="buttons">
+                <button class="submit-btn" id="submitBtn">정답 확인</button>
+                <button class="new-btn" id="newBtn">새 문제</button>
+            </div>
+            
+            <div id="result"></div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">총 문제 수</div>
+                <div class="stat-value" id="totalProblems">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">정답 수</div>
+                <div class="stat-value" id="correctAnswers">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">정답률</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProblem = {};
+        let selectedOption = null;
+        let stats = {total: 0, correct: 0};
+        let animationId = null;
+        let angle = 0;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function generateProblem() {
+            const types = ['velocity_direction', 'acceleration_direction', 'force_direction', 'velocity_comparison', 'centripetal_force'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            // 랜덤 원운동 파라미터
+            const radius = 80 + Math.floor(Math.random() * 40); // 80-120
+            const speed = 1 + Math.random() * 2; // 속력
+            const mass = Math.floor(Math.random() * 3) + 1; // 질량 (m, 2m, 3m)
+            const numPoints = 4; // 관찰 지점 개수
+            const pointIndex = Math.floor(Math.random() * numPoints); // 0-3 (p, q, r, s)
+            const pointLabels = ['p', 'q', 'r', 's'];
+            
+            currentProblem = {
+                type: type,
+                radius: radius,
+                speed: speed,
+                mass: mass,
+                pointIndex: pointIndex,
+                pointLabel: pointLabels[pointIndex],
+                numPoints: numPoints
+            };
+            
+            angle = 0;
+            selectedOption = null;
+            document.getElementById('result').innerHTML = '';
+            
+            displayInfo();
+            generateQuestion();
+            startAnimation();
+        }
+
+        function displayInfo() {
+            const {radius, mass, speed} = currentProblem;
+            document.getElementById('infoBox').innerHTML = 
+                `<strong>조건:</strong> 질량 ${mass}m인 물체가 반지름 ${Math.round(radius)}인 원 위에서 일정한 속력으로 등속 원운동을 하고 있습니다.`;
+        }
+
+        function startAnimation() {
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            function animate() {
+                drawProblem();
+                angle += currentProblem.speed * 0.02;
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function drawProblem() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const {radius, pointIndex, numPoints} = currentProblem;
+            
+            // 원 그리기
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 중심점
+            ctx.fillStyle = '#666';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 관찰 지점 표시 (p, q, r, s)
+            const pointAngles = [0, Math.PI/2, Math.PI, 3*Math.PI/2];
+            const pointLabels = ['p', 'q', 'r', 's'];
+            
+            pointAngles.forEach((pAngle, idx) => {
+                const px = centerX + radius * Math.cos(pAngle);
+                const py = centerY + radius * Math.sin(pAngle);
+                
+                ctx.fillStyle = idx === pointIndex ? '#ef4444' : '#999';
+                ctx.beginPath();
+                ctx.arc(px, py, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = idx === pointIndex ? '#ef4444' : '#666';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(pointLabels[idx], px + 15, py + 5);
+            });
+            
+            // 물체 그리기
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            
+            ctx.fillStyle = '#3b82f6';
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 속도 벡터 (접선 방향)
+            const vx = -Math.sin(angle);
+            const vy = Math.cos(angle);
+            drawVector(x, y, x + vx * 40, y + vy * 40, '#10b981', 'v');
+            
+            // 가속도 벡터 (중심 방향)
+            const ax = -Math.cos(angle);
+            const ay = -Math.sin(angle);
+            drawVector(x, y, x + ax * 30, y + ay * 30, '#ef4444', 'a');
+        }
+
+        function drawVector(x1, y1, x2, y2, color, label) {
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+            
+            // 선 그리기
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            // 화살표
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const arrowLen = 10;
+            
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - arrowLen * Math.cos(angle - Math.PI / 6), 
+                       y2 - arrowLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - arrowLen * Math.cos(angle + Math.PI / 6), 
+                       y2 - arrowLen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+            
+            // 라벨
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(label, x2 + 10, y2 - 10);
+        }
+
+        function generateQuestion() {
+            const {type, pointLabel, mass, radius} = currentProblem;
+            let question = '';
+            let options = [];
+            let correctAnswer = 0;
+            let explanation = '';
+            
+            if (type === 'velocity_direction') {
+                question = `점 ${pointLabel}에서 물체의 속도 방향으로 옳은 것은?`;
+                
+                if (pointLabel === 'p') {
+                    options = ['↑ (위쪽)', '↓ (아래쪽)', '← (왼쪽)', '→ (오른쪽)', '중심 방향'];
+                    correctAnswer = 0;
+                    explanation = '등속 원운동에서 속도는 항상 운동 방향의 접선 방향입니다. 점 p에서는 위쪽(↑) 방향입니다.';
+                } else if (pointLabel === 'q') {
+                    options = ['↑ (위쪽)', '↓ (아래쪽)', '← (왼쪽)', '→ (오른쪽)', '중심 방향'];
+                    correctAnswer = 2;
+                    explanation = '등속 원운동에서 속도는 항상 운동 방향의 접선 방향입니다. 점 q에서는 왼쪽(←) 방향입니다.';
+                } else if (pointLabel === 'r') {
+                    options = ['↑ (위쪽)', '↓ (아래쪽)', '← (왼쪽)', '→ (오른쪽)', '중심 방향'];
+                    correctAnswer = 1;
+                    explanation = '등속 원운동에서 속도는 항상 운동 방향의 접선 방향입니다. 점 r에서는 아래쪽(↓) 방향입니다.';
+                } else {
+                    options = ['↑ (위쪽)', '↓ (아래쪽)', '← (왼쪽)', '→ (오른쪽)', '중심 방향'];
+                    correctAnswer = 3;
+                    explanation = '등속 원운동에서 속도는 항상 운동 방향의 접선 방향입니다. 점 s에서는 오른쪽(→) 방향입니다.';
+                }
+            } else if (type === 'acceleration_direction') {
+                question = `점 ${pointLabel}에서 물체의 가속도 방향으로 옳은 것은?`;
+                options = [
+                    '접선 방향 (속도와 같은 방향)',
+                    '접선 방향 (속도와 반대 방향)',
+                    '원의 중심 방향',
+                    '원의 중심에서 바깥쪽',
+                    '가속도가 0이다'
+                ];
+                correctAnswer = 2;
+                explanation = '등속 원운동에서 가속도(구심 가속도)는 항상 원의 중심을 향합니다. 속도의 방향은 변하지만 크기는 일정하므로 구심 가속도가 발생합니다.';
+            } else if (type === 'force_direction') {
+                question = `점 ${pointLabel}에서 물체가 받는 알짜힘의 방향으로 옳은 것은?`;
+                options = [
+                    '접선 방향 (속도와 같은 방향)',
+                    '접선 방향 (속도와 반대 방향)',
+                    '원의 중심 방향',
+                    '원의 중심에서 바깥쪽',
+                    '알짜힘이 0이다'
+                ];
+                correctAnswer = 2;
+                explanation = '뉴턴 제2법칙(F=ma)에 의해 알짜힘의 방향은 가속도의 방향과 같습니다. 따라서 구심력은 항상 원의 중심을 향합니다.';
+            } else if (type === 'velocity_comparison') {
+                question = `물체의 속력에 대한 설명으로 옳은 것은?`;
+                options = [
+                    '점 p에서 가장 빠르다',
+                    '점 q에서 가장 빠르다',
+                    '점 r에서 가장 빠르다',
+                    '점 s에서 가장 빠르다',
+                    '모든 점에서 속력이 같다'
+                ];
+                correctAnswer = 4;
+                explanation = '등속 원운동에서 "등속"은 속력이 일정하다는 의미입니다. 속도의 방향은 계속 변하지만 속력(속도의 크기)은 항상 일정합니다.';
+            } else {
+                question = `이 물체에 작용하는 구심력의 크기는? (속력을 v라 할 때)`;
+                options = [
+                    `${mass}mv²/${Math.round(radius)}`,
+                    `${mass}m/${Math.round(radius)}`,
+                    `${mass}mv/${Math.round(radius)}`,
+                    `v²/${Math.round(radius)}`,
+                    `${mass}mv²`
+                ];
+                correctAnswer = 0;
+                explanation = `구심력 F = mv²/r 입니다. 질량이 ${mass}m, 반지름이 ${Math.round(radius)}이므로 F = ${mass}mv²/${Math.round(radius)} 입니다.`;
+            }
+            
+            currentProblem.question = question;
+            currentProblem.options = options;
+            currentProblem.correctAnswer = correctAnswer;
+            currentProblem.explanation = explanation;
+            
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            document.getElementById('question').innerHTML = currentProblem.question;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            currentProblem.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = `${index + 1}. ${option}`;
+                div.onclick = () => selectOption(index, div);
+                optionsDiv.appendChild(div);
+            });
+            
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function selectOption(index, element) {
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            selectedOption = index;
+        }
+
+        document.getElementById('submitBtn').onclick = function() {
+            if (selectedOption === null) {
+                alert('답을 선택해주세요!');
+                return;
+            }
+            
+            stats.total++;
+            const isCorrect = selectedOption === currentProblem.correctAnswer;
+            if (isCorrect) stats.correct++;
+            
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, idx) => {
+                if (idx === currentProblem.correctAnswer) {
+                    opt.classList.add('correct');
+                } else if (idx === selectedOption) {
+                    opt.classList.add('incorrect');
+                }
+                opt.onclick = null;
+            });
+            
+            const resultDiv = document.getElementById('result');
+            if (isCorrect) {
+                resultDiv.innerHTML = `
+                    <div class="result correct">✓ 정답입니다!</div>
+                    <div class="explanation">
+                        <strong>해설:</strong><br>
+                        ${currentProblem.explanation}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result incorrect">✗ 틀렸습니다!</div>
+                    <div class="explanation">
+                        <strong>정답:</strong> ${currentProblem.options[currentProblem.correctAnswer]}<br><br>
+                        <strong>해설:</strong><br>
+                        ${currentProblem.explanation}
+                    </div>
+                `;
+            }
+            
+            updateStats();
+            this.disabled = true;
+        };
+
+        document.getElementById('newBtn').onclick = function() {
+            generateProblem();
+        };
+
+        function updateStats() {
+            document.getElementById('totalProblems').textContent = stats.total;
+            document.getElementById('correctAnswers').textContent = stats.correct;
+            document.getElementById('accuracy').textContent = 
+                stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) + '%' : '0%';
+        }
+
+        // 초기 문제 생성
+        generateProblem();
+    </script>
+</body>
+</html>

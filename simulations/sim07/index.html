@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>막대의 평형 문제 시뮬레이터</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: #38f9d7;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .problem-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .problem-label {
+            background: #43e97b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .problem-text {
+            font-size: 17px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .question-highlight {
+            background: #fff7ed;
+            border: 2px solid #fb923c;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #ea580c;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        .diagram {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .lever-system {
+            position: relative;
+            height: 280px;
+        }
+
+        /* 천장 */
+        .ceiling {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(
+                45deg,
+                #475569,
+                #475569 10px,
+                #64748b 10px,
+                #64748b 20px
+            );
+        }
+
+        .ceiling-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        /* 실 (천장에서 막대로) */
+        .thread-to-rod {
+            position: absolute;
+            top: 4px;
+            width: 2px;
+            height: 80px;
+            background: #1e293b;
+        }
+
+        /* 막대 */
+        .rod {
+            position: absolute;
+            top: 84px;
+            left: 5%;
+            right: 5%;
+            height: 10px;
+            background: linear-gradient(to bottom, #a16207, #78350f);
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* 받침대 */
+        .fulcrum {
+            position: absolute;
+            top: 94px;
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-bottom: 30px solid #475569;
+        }
+
+        .fulcrum-base {
+            position: absolute;
+            top: 124px;
+            width: 50px;
+            height: 15px;
+            background: #64748b;
+            border-radius: 3px;
+        }
+
+        .fulcrum-label {
+            position: absolute;
+            top: 145px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        /* p점 표시 */
+        .p-marker {
+            position: absolute;
+            top: 70px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 3px solid #0891b2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0891b2;
+            font-size: 14px;
+        }
+
+        /* 물체를 매다는 실 */
+        .thread-to-object {
+            position: absolute;
+            top: 94px;
+            width: 2px;
+            height: 50px;
+            background: #1e293b;
+        }
+
+        /* 물체 (상자) */
+        .object-box {
+            position: absolute;
+            top: 144px;
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border: 3px solid #d97706;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 15px;
+            color: #78350f;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* 거리 표시 화살표 */
+        .distance-arrow {
+            position: absolute;
+            height: 3px;
+            background: #dc2626;
+        }
+
+        .distance-arrow::before,
+        .distance-arrow::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 18px;
+            background: #dc2626;
+            top: -7.5px;
+        }
+
+        .distance-arrow::before {
+            left: 0;
+        }
+
+        .distance-arrow::after {
+            right: 0;
+        }
+
+        /* 거리 라벨 */
+        .distance-label {
+            position: absolute;
+            font-size: 16px;
+            font-weight: bold;
+            color: #dc2626;
+            background: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            border: 2px solid #dc2626;
+        }
+
+        /* 막대 라벨 */
+        .rod-label {
+            position: absolute;
+            top: 105px;
+            right: 8%;
+            font-size: 13px;
+            font-weight: bold;
+            color: #78350f;
+            background: #fef3c7;
+            padding: 3px 8px;
+            border-radius: 5px;
+            border: 2px solid #d97706;
+        }
+
+        .input-section {
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .input-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: #43e97b;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 18px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-check {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-check:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-new {
+            background: #43e97b;
+            color: white;
+        }
+
+        .btn-new:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .answer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .answer-card.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .result.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .result.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .solution {
+            background: #e0f2fe;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #0ea5e9;
+        }
+
+        .solution-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0369a1;
+            margin-bottom: 15px;
+        }
+
+        .solution-step {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            line-height: 1.8;
+        }
+
+        .formula {
+            background: #fef3c7;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .help-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .help-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #43e97b;
+            margin-bottom: 15px;
+        }
+
+        .help-item {
+            margin: 12px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .help-item::before {
+            content: "▪";
+            position: absolute;
+            left: 0;
+            color: #43e97b;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚖️ 막대의 평형 문제</h1>
+            <p class="subtitle">돌림힘의 평형</p>
+        </div>
+
+        <div class="problem-card">
+            <div class="problem-label">📝 문제</div>
+            <div class="problem-text" id="problemText"></div>
+            
+            <div class="diagram">
+                <div class="ceiling-label">천장</div>
+                <div class="lever-system" id="leverSystem">
+                </div>
+            </div>
+
+            <div class="question-highlight" id="questionText"></div>
+
+            <div class="input-section">
+                <div class="input-label" id="inputLabel">💡 답을 입력하세요</div>
+                <input type="number" class="input-box" id="answerInput" placeholder="예: 20" step="1">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-check" onclick="checkAnswer()">✓ 정답 확인</button>
+                <button class="btn btn-new" onclick="newProblem()">🔄 새 문제</button>
+            </div>
+        </div>
+
+        <div class="answer-card" id="answerCard">
+            <div class="result" id="resultDiv"></div>
+            <div class="solution">
+                <div class="solution-title">📚 풀이 과정</div>
+                <div class="solution-step">
+                    <strong>1단계: 주어진 값 확인</strong>
+                    <div id="givenValues"></div>
+                </div>
+                <div class="solution-step">
+                    <strong>2단계: 돌림힘 평형 조건</strong>
+                    <div class="formula">시계방향 돌림힘 = 반시계방향 돌림힘</div>
+                    <div>받침대(p점)를 중심으로 좌우 돌림힘이 같아야 평형을 이룹니다.</div>
+                </div>
+                <div class="solution-step" id="solutionDetail">
+                </div>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <div class="help-title">💡 도움말</div>
+            <div class="help-item">돌림힘 = 힘 × 거리</div>
+            <div class="help-item">평형 조건: 받침대(p점) 중심으로 좌우 돌림힘이 같음</div>
+            <div class="help-item">물체의 무게가 받침대 왼쪽에서 막대를 당김</div>
+            <div class="help-item">실이 받침대 오른쪽에서 막대를 위로 당김</div>
+            <div class="help-item">답은 정수로 입력하세요</div>
+        </div>
+    </div>
+
+    <script>
+        let currentProblem = {};
+
+        function generateProblem() {
+            // 다양한 문제 유형
+            const problemTypes = [
+                {
+                    type: 'ceiling',
+                    combinations: [
+                        {weight: 60, dist1: 1, dist2: 2}, 
+                        {weight: 80, dist1: 1, dist2: 3}, 
+                        {weight: 90, dist1: 2, dist2: 4}, 
+                        {weight: 60, dist1: 2, dist2: 4}, 
+                        {weight: 80, dist1: 2, dist2: 2},
+                        {weight: 100, dist1: 1, dist2: 4},
+                        {weight: 75, dist1: 2, dist2: 3},
+                        {weight: 50, dist1: 2, dist2: 3},
+                    ],
+                    getText: (w, d1, d2) => `그림과 같이 무게가 <strong>${w}N</strong>인 물체가 받침대로부터 길이 <strong>${d1}m</strong>만큼 떨어진 곳에 매달려 있는 막대가 실로 천장에 수평인 상태로 정지해 있다.`,
+                    getQuestion: () => `천장이 실을 당기는 힘은 몇 N인가?`,
+                    calculateAnswer: (w, d1, d2) => (w * d1) / d2
+                },
+                {
+                    type: 'seesaw',
+                    combinations: [
+                        {weight: 40, dist1: 2, dist2: 4},
+                        {weight: 60, dist1: 1, dist2: 2},
+                        {weight: 50, dist1: 2, dist2: 5},
+                        {weight: 80, dist1: 1, dist2: 4},
+                        {weight: 30, dist1: 3, dist2: 2},
+                    ],
+                    getText: (w, d1, d2) => `시소의 받침대에서 <strong>${d1}m</strong> 떨어진 곳에 <strong>${w}kg</strong>의 어린이가 앉아 있다. 시소가 수평을 이루려면 받침대 반대편 <strong>${d2}m</strong> 떨어진 곳에 몇 kg의 사람이 앉아야 하는가? (단, 막대의 무게는 무시한다)`,
+                    getQuestion: () => `필요한 사람의 질량은 몇 kg인가?`,
+                    calculateAnswer: (w, d1, d2) => (w * d1) / d2
+                },
+                {
+                    type: 'crane',
+                    combinations: [
+                        {weight: 80, dist1: 2, dist2: 4},
+                        {weight: 60, dist1: 1, dist2: 3},
+                        {weight: 100, dist1: 2, dist2: 5},
+                        {weight: 90, dist1: 2, dist2: 6},
+                    ],
+                    getText: (w, d1, d2) => `크레인이 <strong>${w}N</strong>의 물체를 들어올리고 있다. 크레인 지지대(받침대)에서 물체까지의 거리는 <strong>${d1}m</strong>이고, 지지대에서 균형추까지의 거리는 <strong>${d2}m</strong>이다.`,
+                    getQuestion: () => `크레인이 수평을 유지하려면 균형추의 무게는 몇 N이어야 하는가?`,
+                    calculateAnswer: (w, d1, d2) => (w * d1) / d2
+                },
+                {
+                    type: 'bridge',
+                    combinations: [
+                        {weight: 60, dist1: 1, dist2: 2},
+                        {weight: 80, dist1: 2, dist2: 4},
+                        {weight: 50, dist1: 2, dist2: 3},
+                        {weight: 100, dist1: 1, dist2: 4},
+                    ],
+                    getText: (w, d1, d2) => `다리 위의 받침대에서 <strong>${d1}m</strong> 떨어진 곳에 <strong>${w}N</strong>의 짐이 놓여있다. 받침대 반대편 <strong>${d2}m</strong> 지점을 케이블로 잡아당겨 다리가 수평을 이루게 한다.`,
+                    getQuestion: () => `케이블이 당기는 힘은 몇 N인가?`,
+                    calculateAnswer: (w, d1, d2) => (w * d1) / d2
+                },
+                {
+                    type: 'lever_tool',
+                    combinations: [
+                        {weight: 80, dist1: 1, dist2: 4},
+                        {weight: 60, dist1: 1, dist2: 3},
+                        {weight: 100, dist1: 1, dist2: 5},
+                        {weight: 90, dist1: 2, dist2: 6},
+                    ],
+                    getText: (w, d1, d2) => `지렛대를 이용해 <strong>${w}N</strong>의 무거운 바위를 들어올리려고 한다. 받침대에서 바위까지의 거리는 <strong>${d1}m</strong>이고, 받침대에서 힘을 가하는 지점까지의 거리는 <strong>${d2}m</strong>이다.`,
+                    getQuestion: () => `바위를 들어올리기 위해 필요한 최소한의 힘은 몇 N인가?`,
+                    calculateAnswer: (w, d1, d2) => (w * d1) / d2
+                }
+            ];
+            
+            // 랜덤으로 문제 유형 선택
+            const selectedType = problemTypes[Math.floor(Math.random() * problemTypes.length)];
+            const selected = selectedType.combinations[Math.floor(Math.random() * selectedType.combinations.length)];
+            
+            const weight = selected.weight;
+            const dist1 = selected.dist1;
+            const dist2 = selected.dist2;
+            const totalDist = dist1 + dist2;
+            
+            const answer = selectedType.calculateAnswer(weight, dist1, dist2);
+            const torque = weight * dist1;
+            
+            currentProblem = {
+                weight: weight,
+                dist1: dist1,
+                dist2: dist2,
+                threadForce: answer,
+                torque: torque,
+                totalDist: totalDist,
+                answer: answer,
+                problemType: selectedType.type
+            };
+
+            document.getElementById('problemText').innerHTML = selectedType.getText(weight, dist1, dist2);
+            document.getElementById('questionText').innerHTML = selectedType.getQuestion();
+            
+            // 입력 라벨 업데이트
+            const unit = selectedType.type === 'seesaw' ? 'kg' : 'N';
+            document.getElementById('inputLabel').textContent = `💡 답을 입력하세요 (${unit} 단위)`;
+            
+            // 다이어그램 그리기
+            drawDiagram();
+            
+            // 초기화
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerCard').classList.remove('show');
+        }
+
+        function drawDiagram() {
+            const leverSystem = document.getElementById('leverSystem');
+            const weight = currentProblem.weight;
+            const dist1 = currentProblem.dist1;
+            const dist2 = currentProblem.dist2;
+            const totalDist = dist1 + dist2;
+            const problemType = currentProblem.problemType;
+            
+            // 위치 계산 (전체 막대 길이를 90%로)
+            const rodStart = 5;
+            const rodEnd = 95;
+            const rodLength = rodEnd - rodStart;
+            
+            const fulcrumPercent = rodStart + (dist1 / totalDist) * rodLength;
+            const objectPercent = rodStart;
+            const threadPercent = rodEnd;
+            
+            // 문제 유형별로 다른 다이어그램
+            if (problemType === 'ceiling') {
+                // 기존 천장-막대-물체 구조
+                leverSystem.innerHTML = `
+                    <div class="ceiling"></div>
+                    <div class="thread-to-rod" style="left: ${threadPercent}%;"></div>
+                    <div class="rod"></div>
+                    <div class="rod-label">막대</div>
+                    <div class="fulcrum" style="left: ${fulcrumPercent}%; transform: translateX(-50%);"></div>
+                    <div class="fulcrum-base" style="left: ${fulcrumPercent}%; transform: translateX(-50%);"></div>
+                    <div class="fulcrum-label" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">받침대</div>
+                    <div class="p-marker" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">p</div>
+                    <div class="thread-to-object" style="left: ${objectPercent}%;"></div>
+                    <div class="object-box" style="left: ${objectPercent}%; transform: translateX(-50%);">${weight}N</div>
+                    <div class="distance-arrow" style="left: ${objectPercent}%; width: ${fulcrumPercent - objectPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(objectPercent + fulcrumPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist1}m</div>
+                    <div class="distance-arrow" style="left: ${fulcrumPercent}%; width: ${threadPercent - fulcrumPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(fulcrumPercent + threadPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist2}m</div>
+                `;
+            } else if (problemType === 'seesaw') {
+                // 시소 구조
+                leverSystem.innerHTML = `
+                    <div class="rod" style="background: linear-gradient(to bottom, #06b6d4, #0891b2);"></div>
+                    <div class="fulcrum" style="left: ${fulcrumPercent}%; transform: translateX(-50%);"></div>
+                    <div class="fulcrum-base" style="left: ${fulcrumPercent}%; transform: translateX(-50%);"></div>
+                    <div class="fulcrum-label" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">받침대</div>
+                    <div class="p-marker" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">p</div>
+                    <div style="position: absolute; left: ${objectPercent}%; top: 50px; transform: translateX(-50%); font-size: 40px;">🧒</div>
+                    <div class="object-box" style="left: ${objectPercent}%; transform: translateX(-50%); background: #e0f2fe; border-color: #0891b2;">${weight}kg</div>
+                    <div style="position: absolute; left: ${threadPercent}%; top: 50px; transform: translateX(-50%); font-size: 40px;">❓</div>
+                    <div class="distance-arrow" style="left: ${objectPercent}%; width: ${fulcrumPercent - objectPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(objectPercent + fulcrumPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist1}m</div>
+                    <div class="distance-arrow" style="left: ${fulcrumPercent}%; width: ${threadPercent - fulcrumPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(fulcrumPercent + threadPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist2}m</div>
+                `;
+            } else if (problemType === 'crane') {
+                // 크레인 구조
+                leverSystem.innerHTML = `
+                    <div style="position: absolute; left: ${fulcrumPercent}%; top: -20px; width: 60px; height: 110px; background: #64748b; transform: translateX(-50%); border-radius: 5px;"></div>
+                    <div class="rod" style="background: linear-gradient(to bottom, #ef4444, #dc2626);"></div>
+                    <div style="position: absolute; left: ${fulcrumPercent}%; top: 70px; width: 30px; height: 30px; background: #475569; border-radius: 50%; transform: translateX(-50%);"></div>
+                    <div class="fulcrum-label" style="left: ${fulcrumPercent}%; top: 105px; transform: translateX(-50%);">지지대</div>
+                    <div class="p-marker" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">p</div>
+                    <div class="thread-to-object" style="left: ${objectPercent}%; background: #1e293b;"></div>
+                    <div class="object-box" style="left: ${objectPercent}%; transform: translateX(-50%);">${weight}N</div>
+                    <div style="position: absolute; left: ${threadPercent}%; top: 144px; transform: translateX(-50%); width: 50px; height: 50px; background: #64748b; border: 3px solid #475569; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white;">균형추</div>
+                    <div class="distance-arrow" style="left: ${objectPercent}%; width: ${fulcrumPercent - objectPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(objectPercent + fulcrumPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist1}m</div>
+                    <div class="distance-arrow" style="left: ${fulcrumPercent}%; width: ${threadPercent - fulcrumPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(fulcrumPercent + threadPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist2}m</div>
+                `;
+            } else if (problemType === 'bridge') {
+                // 다리 구조
+                leverSystem.innerHTML = `
+                    <div class="rod" style="background: linear-gradient(to bottom, #94a3b8, #64748b); height: 12px;"></div>
+                    <div style="position: absolute; left: ${fulcrumPercent}%; top: 90px; width: 8px; height: 40px; background: #475569; transform: translateX(-50%);"></div>
+                    <div style="position: absolute; left: ${fulcrumPercent}%; top: 130px; width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 30px solid #334155; transform: translateX(-50%);"></div>
+                    <div class="fulcrum-label" style="left: ${fulcrumPercent}%; top: 165px; transform: translateX(-50%);">교각</div>
+                    <div class="p-marker" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">p</div>
+                    <div class="object-box" style="left: ${objectPercent}%; top: 40px; transform: translateX(-50%);">${weight}N</div>
+                    <div class="thread-to-rod" style="left: ${threadPercent}%; background: #475569; height: 50px;"></div>
+                    <div style="position: absolute; left: ${threadPercent}%; top: -25px; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: #475569; background: #e2e8f0; padding: 3px 8px; border-radius: 5px;">케이블</div>
+                    <div class="distance-arrow" style="left: ${objectPercent}%; width: ${fulcrumPercent - objectPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(objectPercent + fulcrumPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist1}m</div>
+                    <div class="distance-arrow" style="left: ${fulcrumPercent}%; width: ${threadPercent - fulcrumPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(fulcrumPercent + threadPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist2}m</div>
+                `;
+            } else if (problemType === 'lever_tool') {
+                // 지렛대 도구
+                leverSystem.innerHTML = `
+                    <div class="rod" style="background: linear-gradient(to bottom, #78350f, #451a03);"></div>
+                    <div class="fulcrum" style="left: ${fulcrumPercent}%; transform: translateX(-50%); border-bottom-color: #78350f;"></div>
+                    <div class="fulcrum-base" style="left: ${fulcrumPercent}%; transform: translateX(-50%); background: #78350f; width: 40px;"></div>
+                    <div class="fulcrum-label" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">받침대</div>
+                    <div class="p-marker" style="left: ${fulcrumPercent}%; transform: translateX(-50%);">p</div>
+                    <div style="position: absolute; left: ${objectPercent}%; top: 130px; transform: translateX(-50%); font-size: 50px;">🪨</div>
+                    <div class="object-box" style="left: ${objectPercent}%; transform: translateX(-50%); background: #a8a29e; border-color: #78716c; top: 185px; height: 30px; font-size: 13px;">${weight}N</div>
+                    <div style="position: absolute; left: ${threadPercent}%; top: 50px; transform: translateX(-50%); font-size: 40px;">👇</div>
+                    <div style="position: absolute; left: ${threadPercent}%; top: 100px; transform: translateX(-50%); font-size: 12px; font-weight: bold; color: #dc2626; background: #fee2e2; padding: 3px 8px; border-radius: 5px;">힘을 가함</div>
+                    <div class="distance-arrow" style="left: ${objectPercent}%; width: ${fulcrumPercent - objectPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(objectPercent + fulcrumPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist1}m</div>
+                    <div class="distance-arrow" style="left: ${fulcrumPercent}%; width: ${threadPercent - fulcrumPercent}%; top: 210px;"></div>
+                    <div class="distance-label" style="left: ${(fulcrumPercent + threadPercent) / 2}%; top: 225px; transform: translateX(-50%);">${dist2}m</div>
+                `;
+            }
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseFloat(document.getElementById('answerInput').value);
+            
+            if (isNaN(userAnswer)) {
+                alert('답을 입력해주세요!');
+                return;
+            }
+
+            const correctAnswer = currentProblem.answer;
+            const isCorrect = (userAnswer === correctAnswer);
+
+            const resultDiv = document.getElementById('resultDiv');
+            if (isCorrect) {
+                resultDiv.className = 'result correct';
+                resultDiv.innerHTML = '🎉 정답입니다! 잘했어요!';
+            } else {
+                resultDiv.className = 'result incorrect';
+                resultDiv.innerHTML = `❌ 틀렸습니다. 다시 한번 풀어보세요!<br>정답: ${correctAnswer}${currentProblem.problemType === 'seesaw' ? 'kg' : 'N'}`;
+            }
+
+            // 풀이 과정 표시
+            const unit = currentProblem.problemType === 'seesaw' ? 'kg' : 'N';
+            document.getElementById('givenValues').innerHTML = 
+                `• 왼쪽의 무게(또는 질량) = ${currentProblem.weight}${unit}<br>` +
+                `• 왼쪽 거리(받침대로부터) = ${currentProblem.dist1}m<br>` +
+                `• 오른쪽 거리(받침대로부터) = ${currentProblem.dist2}m`;
+
+            document.getElementById('solutionDetail').innerHTML = 
+                `<strong>3단계: 평형 조건 적용</strong>` +
+                `<div style="margin-top: 10px;">` +
+                `받침대(p점)를 중심으로 돌림힘 평형:<br>` +
+                `<div style="margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 8px;">` +
+                `왼쪽 돌림힘 (시계방향) = 오른쪽 돌림힘 (반시계방향)` +
+                `</div>` +
+                `<div class="formula">${currentProblem.weight} × ${currentProblem.dist1} = 구하려는 힘(F) × ${currentProblem.dist2}</div>` +
+                `<div class="formula">${currentProblem.torque} = F × ${currentProblem.dist2}</div>` +
+                `<div class="formula">F = ${currentProblem.torque} ÷ ${currentProblem.dist2}</div>` +
+                `<div class="formula">F = ${correctAnswer}${currentProblem.problemType === 'seesaw' ? 'kg' : 'N'}</div>` +
+                `<div style="margin-top: 15px;">따라서 답은 <strong>${correctAnswer}${currentProblem.problemType === 'seesaw' ? 'kg' : 'N'}</strong>입니다.</div>` +
+                `</div>`;
+
+            document.getElementById('answerCard').classList.add('show');
+            document.getElementById('answerCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function newProblem() {
+            generateProblem();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 엔터키로 정답 확인
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // 페이지 로드시 첫 문제 생성
+        generateProblem();
+    </script>
+</body>
+</html>

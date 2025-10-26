@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>원운동 문제 시뮬레이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .problem-number {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .problem-text {
+            font-size: 16px;
+            color: #222;
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+        
+        .diagram {
+            width: 100%;
+            max-width: 350px;
+            margin: 25px auto;
+            display: block;
+        }
+        
+        .question {
+            font-size: 16px;
+            color: #222;
+            margin: 25px 0 20px 0;
+        }
+        
+        .choices {
+            margin: 20px 0;
+        }
+        
+        .choice {
+            display: block;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background-color: white;
+            border: 1px solid #999;
+            cursor: pointer;
+            font-size: 16px;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+        
+        .choice:hover {
+            background-color: #f8f8f8;
+        }
+        
+        .choice.selected {
+            background-color: #e8e8e8;
+            border-color: #666;
+        }
+        
+        .choice.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .choice.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #666;
+            background-color: white;
+            cursor: pointer;
+            color: #333;
+        }
+        
+        button:hover {
+            background-color: #f0f0f0;
+        }
+        
+        button:disabled {
+            background-color: #e0e0e0;
+            cursor: not-allowed;
+            color: #999;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 15px;
+            display: none;
+        }
+        
+        .feedback.show {
+            display: block;
+        }
+        
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .solution {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #999;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .solution-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .solution-step {
+            margin: 8px 0;
+        }
+
+        .note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="problem-number">3.</div>
+        <div class="problem-text" id="problemText"></div>
+        
+        <svg class="diagram" id="diagram" viewBox="0 0 300 280">
+            <!-- 테이블 -->
+            <rect x="50" y="140" width="200" height="10" fill="none" stroke="#333" stroke-width="2"/>
+            <line x1="70" y1="150" x2="70" y2="220" stroke="#333" stroke-width="2"/>
+            <line x1="230" y1="150" x2="230" y2="220" stroke="#333" stroke-width="2"/>
+            
+            <!-- 원운동 경로 (점선) -->
+            <ellipse cx="150" cy="100" rx="70" ry="30" fill="none" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+            
+            <!-- 물체 B -->
+            <circle cx="150" cy="85" r="12" fill="#888"/>
+            <text x="150" y="90" text-anchor="middle" font-size="14" fill="white" font-weight="bold">B</text>
+            
+            <!-- 반지름 표시 -->
+            <line x1="150" y1="100" x2="220" y2="100" stroke="#666" stroke-width="1"/>
+            <text x="185" y="95" font-size="14" fill="#333" id="radiusText"></text>
+            
+            <!-- 속력 표시 -->
+            <line x1="130" y1="75" x2="110" y2="65" stroke="#333" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+            <text x="95" y="60" font-size="14" fill="#333" id="velocityText"></text>
+            
+            <!-- 질량 B 표시 -->
+            <text x="145" y="70" font-size="12" fill="#333" id="massBText"></text>
+            
+            <!-- 줄 -->
+            <line x1="150" y1="97" x2="150" y2="185" stroke="#333" stroke-width="1.5"/>
+            
+            <!-- 물체 A -->
+            <rect x="140" y="185" width="20" height="20" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="150" y="199" text-anchor="middle" font-size="14" fill="#333" font-weight="bold">A</text>
+            
+            <!-- 화살표 정의 -->
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+                </marker>
+            </defs>
+        </svg>
+        
+        <div class="question" id="questionText"></div>
+        <div class="note">(단, 중력 가속도는 10m/s²이고, 물체의 크기, 실의 질량은 무시한다.)</div>
+        
+        <div class="choices" id="choices"></div>
+        
+        <div class="buttons">
+            <button onclick="checkAnswer()">정답 확인</button>
+            <button onclick="newProblem()">새 문제</button>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        let currentProblem = {};
+        let selectedChoice = null;
+        let answered = false;
+
+        function generateProblem() {
+            // 정답을 먼저 정하기 (1kg ~ 5kg)
+            const correctAnswer = Math.floor(Math.random() * 5) + 1;
+            
+            // 속력 (1 ~ 5 m/s)
+            const velocity = Math.floor(Math.random() * 5) + 1;
+            
+            // 물체 B의 질량 (1kg ~ 4kg)
+            const massB = Math.floor(Math.random() * 4) + 1;
+            
+            // 반지름을 자연수로 설정 (1m ~ 5m)
+            const radius = Math.floor(Math.random() * 5) + 1;
+            
+            // 실제 정답 계산 (반지름이 자연수이므로)
+            const calculatedAnswer = (massB * velocity * velocity) / (radius * 10);
+            const actualCorrectAnswer = Math.round(calculatedAnswer);
+            
+            // 오답 4개 생성 (정답과 중복되지 않도록)
+            let choices = [actualCorrectAnswer];
+            let wrongAnswers = [];
+            
+            // 정답 ±1, ±2, ±3 범위에서 오답 생성
+            const possibleWrong = [];
+            for (let diff = -3; diff <= 3; diff++) {
+                if (diff !== 0) {
+                    const candidate = actualCorrectAnswer + diff;
+                    if (candidate > 0 && candidate <= 10) {
+                        possibleWrong.push(candidate);
+                    }
+                }
+            }
+            
+            // 랜덤하게 4개 선택
+            while (wrongAnswers.length < 4 && possibleWrong.length > 0) {
+                const randomIndex = Math.floor(Math.random() * possibleWrong.length);
+                const selected = possibleWrong[randomIndex];
+                if (!wrongAnswers.includes(selected)) {
+                    wrongAnswers.push(selected);
+                }
+                possibleWrong.splice(randomIndex, 1);
+            }
+            
+            // 부족하면 추가
+            let addValue = actualCorrectAnswer + 4;
+            while (wrongAnswers.length < 4) {
+                if (!wrongAnswers.includes(addValue) && addValue !== actualCorrectAnswer && addValue > 0 && addValue <= 10) {
+                    wrongAnswers.push(addValue);
+                }
+                addValue++;
+            }
+            
+            // 정답과 오답 합치기
+            choices = [actualCorrectAnswer, ...wrongAnswers];
+            
+            // 정렬
+            choices.sort((a, b) => a - b);
+            
+            currentProblem = {
+                radius: radius,
+                velocity: velocity,
+                massB: massB,
+                correctAnswer: actualCorrectAnswer,
+                choices: choices
+            };
+        }
+
+        function displayProblem() {
+            const p = currentProblem;
+            
+            document.getElementById('problemText').innerHTML = 
+                `그림과 같이 물체 A와 실로 연결된 물체 B가 마찰이 없는 수평면에서 반지름이 ${p.radius}m인 원궤도를 따라 ${p.velocity}m/s의 속력으로 등속 원운동을 한다. B의 질량은 ${p.massB}kg이다.`;
+            
+            document.getElementById('radiusText').textContent = `${p.radius}m`;
+            document.getElementById('velocityText').textContent = `${p.velocity}m/s`;
+            document.getElementById('massBText').textContent = `${p.massB}kg`;
+            
+            document.getElementById('questionText').textContent = 'A의 질량은?';
+            
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            const labels = ['①', '②', '③', '④', '⑤'];
+            p.choices.forEach((choice, index) => {
+                const div = document.createElement('div');
+                div.className = 'choice';
+                // 자연수인 경우 소수점 없이 표시
+                const displayValue = Number.isInteger(choice) ? choice : choice.toFixed(2);
+                div.textContent = `${labels[index]} ${displayValue}kg`;
+                div.onclick = () => selectChoice(index);
+                choicesDiv.appendChild(div);
+            });
+            
+            document.getElementById('feedback').classList.remove('show');
+            selectedChoice = null;
+            answered = false;
+        }
+
+        function selectChoice(index) {
+            if (answered) return;
+            
+            const choices = document.querySelectorAll('.choice');
+            choices.forEach(c => c.classList.remove('selected'));
+            choices[index].classList.add('selected');
+            selectedChoice = index;
+        }
+
+        function checkAnswer() {
+            if (selectedChoice === null) {
+                alert('답을 선택해주세요.');
+                return;
+            }
+            
+            if (answered) return;
+            answered = true;
+            
+            const choices = document.querySelectorAll('.choice');
+            const selectedValue = currentProblem.choices[selectedChoice];
+            const correctValue = currentProblem.correctAnswer;
+            
+            const feedback = document.getElementById('feedback');
+            
+            // 풀이 과정 생성
+            const p = currentProblem;
+            const centripetalForce = p.massB * p.velocity * p.velocity / p.radius;
+            
+            let solutionHTML = `
+                <div class="solution">
+                    <div class="solution-title">【풀이】</div>
+                    <div class="solution-step">
+                        물체 B는 등속 원운동을 하므로, 구심력이 필요합니다.<br>
+                        이 구심력은 실의 장력 T에 의해 제공됩니다.
+                    </div>
+                    <div class="solution-step">
+                        <strong>① 구심력 공식:</strong> F = mv²/r
+                    </div>
+                    <div class="solution-step">
+                        <strong>② 장력 T 계산:</strong><br>
+                        T = ${p.massB} × ${p.velocity}² ÷ ${p.radius}<br>
+                        T = ${p.massB} × ${p.velocity * p.velocity} ÷ ${p.radius}<br>
+                        T = ${centripetalForce.toFixed(2)}N
+                    </div>
+                    <div class="solution-step">
+                        <strong>③ 물체 A의 평형 조건:</strong><br>
+                        물체 A가 정지해 있으므로, 장력 T = 물체 A의 무게<br>
+                        T = m<sub>A</sub> × g
+                    </div>
+                    <div class="solution-step">
+                        <strong>④ 물체 A의 질량:</strong><br>
+                        m<sub>A</sub> = T ÷ g = ${centripetalForce.toFixed(2)} ÷ 10 = ${(centripetalForce / 10).toFixed(2)}kg<br>
+                        ≈ ${correctValue}kg
+                    </div>
+                </div>
+            `;
+            
+            if (selectedValue === correctValue) {
+                choices[selectedChoice].classList.add('correct');
+                feedback.className = 'feedback correct show';
+                feedback.innerHTML = '정답입니다!' + solutionHTML;
+            } else {
+                choices[selectedChoice].classList.add('incorrect');
+                
+                // 정답 표시
+                currentProblem.choices.forEach((choice, index) => {
+                    if (choice === correctValue) {
+                        choices[index].classList.add('correct');
+                    }
+                });
+                
+                feedback.className = 'feedback incorrect show';
+                feedback.innerHTML = `틀렸습니다. 정답은 ${correctValue}kg입니다.` + solutionHTML;
+            }
+        }
+
+        function newProblem() {
+            generateProblem();
+            displayProblem();
+        }
+
+        // 초기 문제 생성
+        newProblem();
+    </script>
+</body>
+</html>

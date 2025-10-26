@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>물리학2 문제 시뮬레이터</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .problem-section {
+            margin: 25px 0;
+        }
+        
+        .problem-type {
+            background: #f0f0f0;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        
+        .problem-text {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .input-section {
+            margin: 25px 0;
+        }
+        
+        .input-group {
+            margin: 15px 0;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .new-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .new-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .feedback-details {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: normal;
+            line-height: 1.6;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚛️ 물리학2 시뮬레이터</h1>
+        </div>
+        
+        <div class="problem-section">
+            <div class="problem-type" id="problemType"></div>
+            <div class="problem-text" id="problemText"></div>
+            <div class="diagram">
+                <canvas id="diagram" width="400" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div class="input-section" id="inputSection"></div>
+        
+        <div class="button-group">
+            <button class="check-btn" onclick="checkAnswer()">정답 확인</button>
+            <button class="new-btn" onclick="newProblem()">새 문제</button>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        let currentProblem = null;
+
+        const problemTypes = [
+            {
+                type: '등속원운동 - 변위와 이동거리',
+                generator: () => {
+                    const choices = [
+                        {r: 4, angle: 90, displacement: 5.66, distance: 6.28},
+                        {r: 6, angle: 90, displacement: 8.49, distance: 9.42},
+                        {r: 8, angle: 180, displacement: 16, distance: 25.13},
+                        {r: 10, angle: 180, displacement: 20, distance: 31.42}
+                    ];
+                    const choice = choices[Math.floor(Math.random() * choices.length)];
+                    
+                    return {
+                        text: `반지름 ${choice.r}m인 원궤도를 따라 물체가 등속원운동을 하고 있습니다. 물체가 ${choice.angle}° 회전했을 때, 변위의 크기를 구하시오. (원주율 π = 3.14)`,
+                        inputs: [
+                            { label: '변위의 크기 (m)', answer: choice.displacement, unit: 'm' }
+                        ],
+                        diagram: (ctx) => {
+                            ctx.clearRect(0, 0, 400, 300);
+                            ctx.strokeStyle = '#667eea';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 80, 0, 2 * Math.PI);
+                            ctx.stroke();
+                            
+                            // 시작점
+                            ctx.fillStyle = '#28a745';
+                            ctx.beginPath();
+                            ctx.arc(280, 150, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.fillStyle = '#28a745';
+                            ctx.font = 'bold 14px Arial';
+                            ctx.fillText('A', 290, 150);
+                            
+                            // 끝점
+                            const endX = 200 + 80 * Math.cos((270 - choice.angle) * Math.PI / 180);
+                            const endY = 150 + 80 * Math.sin((270 - choice.angle) * Math.PI / 180);
+                            ctx.fillStyle = '#e74c3c';
+                            ctx.beginPath();
+                            ctx.arc(endX, endY, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.fillStyle = '#e74c3c';
+                            ctx.fillText('B', endX + 10, endY);
+                            
+                            // 변위 벡터
+                            ctx.strokeStyle = '#ff6b6b';
+                            ctx.lineWidth = 3;
+                            ctx.setLineDash([5, 5]);
+                            ctx.beginPath();
+                            ctx.moveTo(280, 150);
+                            ctx.lineTo(endX, endY);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                            
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 16px Arial';
+                            ctx.fillText(`r = ${choice.r}m`, 230, 140);
+                            ctx.fillText(`θ = ${choice.angle}°`, 200, 250);
+                        },
+                        solution: `주어진 값: r = ${choice.r}m, θ = ${choice.angle}°\n변위의 크기 = 2r×sin(θ/2) = 2×${choice.r}×sin(${choice.angle/2}°) = ${choice.displacement}m`
+                    };
+                }
+            },
+            {
+                type: '등속원운동 - 속도 방향',
+                generator: () => {
+                    const choices = [
+                        {r: 5, v: 10, description: '접선방향'},
+                        {r: 8, v: 12, description: '접선방향'},
+                        {r: 10, v: 15, description: '접선방향'}
+                    ];
+                    const choice = choices[Math.floor(Math.random() * choices.length)];
+                    
+                    return {
+                        text: `반지름 ${choice.r}m인 원궤도를 따라 물체가 속력 ${choice.v}m/s로 등속원운동을 하고 있습니다. 물체의 속도 방향은 어느 방향입니까? (원의 중심 방향, 접선 방향, 반지름 방향 중 선택)`,
+                        inputs: [
+                            { label: '속도 방향', answer: '접선', unit: '', isText: true }
+                        ],
+                        diagram: (ctx) => {
+                            ctx.clearRect(0, 0, 400, 300);
+                            ctx.strokeStyle = '#667eea';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 80, 0, 2 * Math.PI);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#764ba2';
+                            ctx.beginPath();
+                            ctx.arc(280, 150, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            // 속도 벡터 (접선 방향)
+                            ctx.strokeStyle = '#ff6b6b';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(280, 150);
+                            ctx.lineTo(280, 100);
+                            ctx.stroke();
+                            
+                            // 화살표
+                            ctx.beginPath();
+                            ctx.moveTo(280, 100);
+                            ctx.lineTo(275, 110);
+                            ctx.moveTo(280, 100);
+                            ctx.lineTo(285, 110);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#ff6b6b';
+                            ctx.font = 'bold 14px Arial';
+                            ctx.fillText('v', 290, 95);
+                            
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 16px Arial';
+                            ctx.fillText(`v = ${choice.v}m/s`, 290, 160);
+                            ctx.fillText(`r = ${choice.r}m`, 230, 140);
+                        },
+                        solution: `등속원운동에서 속도의 방향은 항상 원의 접선 방향입니다.`
+                    };
+                }
+            },
+            {
+                type: '등속원운동 - 가속도 방향',
+                generator: () => {
+                    const choices = [
+                        {r: 4, v: 8, a: 16},
+                        {r: 5, v: 10, a: 20},
+                        {r: 8, v: 12, a: 18}
+                    ];
+                    const choice = choices[Math.floor(Math.random() * choices.length)];
+                    
+                    return {
+                        text: `반지름 ${choice.r}m인 원궤도를 따라 물체가 속력 ${choice.v}m/s로 등속원운동을 하고 있습니다. 가속도의 방향은 어느 방향입니까? (원의 중심 방향, 접선 방향 중 선택)`,
+                        inputs: [
+                            { label: '가속도 방향', answer: '중심', unit: '', isText: true }
+                        ],
+                        diagram: (ctx) => {
+                            ctx.clearRect(0, 0, 400, 300);
+                            ctx.strokeStyle = '#667eea';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 80, 0, 2 * Math.PI);
+                            ctx.stroke();
+                            
+                            // 중심
+                            ctx.fillStyle = '#333';
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            ctx.fillStyle = '#764ba2';
+                            ctx.beginPath();
+                            ctx.arc(280, 150, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            // 구심가속도 벡터
+                            ctx.strokeStyle = '#e74c3c';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(280, 150);
+                            ctx.lineTo(220, 150);
+                            ctx.stroke();
+                            
+                            // 화살표
+                            ctx.beginPath();
+                            ctx.moveTo(220, 150);
+                            ctx.lineTo(230, 145);
+                            ctx.moveTo(220, 150);
+                            ctx.lineTo(230, 155);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#e74c3c';
+                            ctx.font = 'bold 14px Arial';
+                            ctx.fillText('a', 210, 140);
+                            
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 16px Arial';
+                            ctx.fillText(`a = ${choice.a}m/s²`, 250, 180);
+                            ctx.fillText(`r = ${choice.r}m`, 230, 130);
+                        },
+                        solution: `등속원운동에서 가속도는 항상 원의 중심 방향을 향합니다. (구심가속도)`
+                    };
+                }
+            },
+            {
+                type: '등속원운동 - 주기',
+                generator: () => {
+                    const choices = [
+                        {r: 4, v: 4, T: 6.28},
+                        {r: 6, v: 6, T: 6.28},
+                        {r: 8, v: 4, T: 12.56},
+                        {r: 10, v: 5, T: 12.56}
+                    ];
+                    const choice = choices[Math.floor(Math.random() * choices.length)];
+                    
+                    return {
+                        text: `반지름 ${choice.r}m인 원궤도를 따라 물체가 속력 ${choice.v}m/s로 등속원운동을 하고 있습니다. 주기를 구하시오. (원주율 π = 3.14)`,
+                        inputs: [
+                            { label: '주기 T (초)', answer: choice.T, unit: '초' }
+                        ],
+                        diagram: (ctx) => {
+                            ctx.clearRect(0, 0, 400, 300);
+                            ctx.strokeStyle = '#667eea';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 80, 0, 2 * Math.PI);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#764ba2';
+                            ctx.beginPath();
+                            ctx.arc(280, 150, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            // 화살표로 회전 표시
+                            ctx.strokeStyle = '#28a745';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 60, 0, Math.PI * 1.5);
+                            ctx.stroke();
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(200, 90);
+                            ctx.lineTo(195, 100);
+                            ctx.moveTo(200, 90);
+                            ctx.lineTo(205, 95);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 16px Arial';
+                            ctx.fillText(`r = ${choice.r}m`, 230, 140);
+                            ctx.fillText(`v = ${choice.v}m/s`, 290, 160);
+                            ctx.fillText('π = 3.14', 200, 250);
+                        },
+                        solution: `주어진 값: r = ${choice.r}m, v = ${choice.v}m/s\n주기 T = 2πr/v = 2×3.14×${choice.r}/${choice.v} = ${choice.T}초`
+                    };
+                }
+            },
+            {
+                type: '등속원운동 - 속력',
+                generator: () => {
+                    const choices = [
+                        {r: 4, T: 4, v: 6.28},
+                        {r: 6, T: 4, v: 9.42},
+                        {r: 8, T: 4, v: 12.56},
+                        {r: 10, T: 5, v: 12.56}
+                    ];
+                    const choice = choices[Math.floor(Math.random() * choices.length)];
+                    
+                    return {
+                        text: `반지름 ${choice.r}m인 원궤도를 따라 물체가 등속원운동을 하고 있습니다. 물체의 주기가 ${choice.T}초일 때, 속력을 구하시오. (원주율 π = 3.14)`,
+                        inputs: [
+                            { label: '속력 v (m/s)', answer: choice.v, unit: 'm/s' }
+                        ],
+                        diagram: (ctx) => {
+                            ctx.clearRect(0, 0, 400, 300);
+                            ctx.strokeStyle = '#667eea';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 80, 0, 2 * Math.PI);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#764ba2';
+                            ctx.beginPath();
+                            ctx.arc(280, 150, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            ctx.strokeStyle = '#28a745';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(200, 150);
+                            ctx.lineTo(280, 150);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 16px Arial';
+                            ctx.fillText(`r = ${choice.r}m`, 230, 140);
+                            ctx.fillText(`T = ${choice.T}s`, 200, 250);
+                            ctx.fillText('π = 3.14', 200, 270);
+                            
+                            ctx.strokeStyle = '#ff6b6b';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([5, 5]);
+                            ctx.beginPath();
+                            ctx.moveTo(280, 150);
+                            ctx.lineTo(320, 130);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                            
+                            ctx.fillStyle = '#ff6b6b';
+                            ctx.font = '14px Arial';
+                            ctx.fillText('v', 325, 130);
+                        },
+                        solution: `주어진 값: r = ${choice.r}m, T = ${choice.T}s, π = 3.14\n속력 v = 2πr/T = 2×3.14×${choice.r}/${choice.T} = ${choice.v} m/s`
+                    };
+                }
+            },
+            {
+                type: '등속원운동 - 구심가속도',
+                generator: () => {
+                    const choices = [
+                        {r: 2, v: 4, a: 8},
+                        {r: 4, v: 4, a: 4},
+                        {r: 5, v: 10, a: 20},
+                        {r: 8, v: 4, a: 2},
+                        {r: 10, v: 10, a: 10}
+                    ];
+                    const choice = choices[Math.floor(Math.random() * choices.length)];
+                    
+                    return {
+                        text: `반지름 ${choice.r}m인 원궤도를 따라 물체가 속력 ${choice.v}m/s로 등속원운동을 하고 있습니다. 구심가속도의 크기를 구하시오.`,
+                        inputs: [
+                            { label: '구심가속도 a (m/s²)', answer: choice.a, unit: 'm/s²' }
+                        ],
+                        diagram: (ctx) => {
+                            ctx.clearRect(0, 0, 400, 300);
+                            ctx.strokeStyle = '#667eea';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(200, 150, 80, 0, 2 * Math.PI);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#764ba2';
+                            ctx.beginPath();
+                            ctx.arc(280, 150, 8, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            ctx.strokeStyle = '#28a745';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(200, 150);
+                            ctx.lineTo(280, 150);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 16px Arial';
+                            ctx.fillText(`r = ${choice.r}m`, 230, 140);
+                            ctx.fillText(`v = ${choice.v}m/s`, 290, 175);
+                            
+                            ctx.strokeStyle = '#e74c3c';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(280, 150);
+                            ctx.lineTo(230, 150);
+                            ctx.stroke();
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(230, 150);
+                            ctx.lineTo(240, 145);
+                            ctx.moveTo(230, 150);
+                            ctx.lineTo(240, 155);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = '#e74c3c';
+                            ctx.font = 'bold 14px Arial';
+                            ctx.fillText('a', 220, 145);
+                        },
+                        solution: `주어진 값: r = ${choice.r}m, v = ${choice.v}m/s\n구심가속도 a = v²/r = ${choice.v}²/${choice.r} = ${choice.a} m/s²`
+                    };
+                }
+            }
+        ];
+
+        function newProblem() {
+            const problemType = problemTypes[Math.floor(Math.random() * problemTypes.length)];
+            currentProblem = problemType.generator();
+            
+            document.getElementById('problemType').textContent = problemType.type;
+            document.getElementById('problemText').textContent = currentProblem.text;
+            
+            const canvas = document.getElementById('diagram');
+            const ctx = canvas.getContext('2d');
+            currentProblem.diagram(ctx);
+            
+            const inputSection = document.getElementById('inputSection');
+            inputSection.innerHTML = '';
+            currentProblem.inputs.forEach((input, index) => {
+                const div = document.createElement('div');
+                div.className = 'input-group';
+                const inputType = input.isText ? 'text' : 'number';
+                const stepAttr = input.isText ? '' : 'step="0.01"';
+                div.innerHTML = `
+                    <label>${input.label}</label>
+                    <input type="${inputType}" ${stepAttr} id="input${index}" placeholder="답을 입력하세요">
+                `;
+                inputSection.appendChild(div);
+            });
+            
+            document.getElementById('feedback').style.display = 'none';
+        }
+
+        function checkAnswer() {
+            let allCorrect = true;
+            const feedback = document.getElementById('feedback');
+            let feedbackText = '';
+            
+            currentProblem.inputs.forEach((input, index) => {
+                const userInput = document.getElementById(`input${index}`).value;
+                
+                if (input.isText) {
+                    const normalizedUser = userInput.trim().toLowerCase();
+                    const normalizedAnswer = input.answer.toLowerCase();
+                    if (!normalizedUser.includes(normalizedAnswer)) {
+                        allCorrect = false;
+                    }
+                } else {
+                    const userAnswer = parseFloat(userInput);
+                    const correctAnswer = input.answer;
+                    const tolerance = Math.abs(correctAnswer * 0.02);
+                    
+                    if (Math.abs(userAnswer - correctAnswer) > tolerance) {
+                        allCorrect = false;
+                    }
+                }
+            });
+            
+            if (allCorrect) {
+                feedback.className = 'feedback correct';
+                feedbackText = '🎉 정답입니다!';
+                let details = '<div class="feedback-details">';
+                details += '<strong>정답:</strong><br>';
+                currentProblem.inputs.forEach(input => {
+                    details += `${input.label}: ${input.answer} ${input.unit}<br>`;
+                });
+                details += '<br><strong>풀이:</strong><br>' + currentProblem.solution.replace(/\n/g, '<br>');
+                details += '</div>';
+                feedback.innerHTML = feedbackText + details;
+                feedback.style.display = 'block';
+                
+                setTimeout(() => {
+                    newProblem();
+                }, 3000);
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedbackText = '❌ 틀렸습니다. 다시 시도해보세요!';
+                let details = '<div class="feedback-details">';
+                details += '<strong>정답:</strong><br>';
+                currentProblem.inputs.forEach(input => {
+                    details += `${input.label}: ${input.answer} ${input.unit}<br>`;
+                });
+                details += '<br><strong>풀이:</strong><br>' + currentProblem.solution.replace(/\n/g, '<br>');
+                details += '</div>';
+                feedback.innerHTML = feedbackText + details;
+                feedback.style.display = 'block';
+            }
+        }
+
+        window.onload = () => {
+            newProblem();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>물리2 토크 문제</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 4px solid #ffd6e8;
+        }
+        
+        /* 시작 화면 스타일 */
+        .start-screen {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .start-screen h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: 900;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .scientist-emoji {
+            font-size: 120px;
+            margin: 30px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .start-description {
+            font-size: 18px;
+            color: #555;
+            line-height: 1.8;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffeef8 0%, #e0f7ff 100%);
+            border-radius: 15px;
+            border: 2px solid #ffd6e8;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            animation: buttonGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes buttonGlow {
+            0%, 100% { box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 10px 40px rgba(102, 126, 234, 0.7); }
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+        
+        .start-btn:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        /* 게임 화면 스타일 */
+        .game-screen {
+            display: none;
+        }
+        
+        .game-screen.active {
+            display: block;
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 26px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 900;
+        }
+        
+        .problem-box {
+            background: linear-gradient(135deg, #ffeef8 0%, #e0f7ff 100%);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 3px solid #ffd6e8;
+        }
+        
+        .problem-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .diagram {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+            border: 3px dashed #ffd6e8;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .values-display {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe6f0 100%);
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 0;
+            font-size: 15px;
+            color: #d63384;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #ffd6e8;
+        }
+        
+        .input-section {
+            margin: 20px 0;
+        }
+        
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .choice-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 3px solid #ffd6e8;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #fffbf7 0%, #fff 100%);
+            color: #2d3436;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .choice-btn:hover {
+            background: linear-gradient(135deg, #ffeef8 0%, #e0f7ff 100%);
+            border-color: #ff69b4;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+        }
+        
+        .choice-btn.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+        
+        label {
+            display: block;
+            font-size: 17px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        input {
+            display: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .check-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .new-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .new-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+        
+        .new-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .chapter-btn {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-top: 0;
+        }
+        
+        .chapter-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+        
+        .chapter-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .hint-btn {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #2d3436;
+        }
+        
+        .hint-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(253, 203, 110, 0.4);
+        }
+        
+        .hint-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .feedback.correct {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 3px solid #b1dfbb;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 3px solid #f5c6cb;
+            display: block;
+        }
+        
+        .solution {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe6cc 100%);
+            border: 3px solid #ffd93d;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .solution.show {
+            display: block;
+        }
+        
+        .hint {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
+            border: 3px solid #fdcb6e;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .hint.show {
+            display: block;
+        }
+        
+        .hint-title {
+            font-weight: bold;
+            color: #d63031;
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .hint-text {
+            color: #2d3436;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+        
+        .solution-title {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .solution-text {
+            color: #856404;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+        
+        .emoji {
+            font-size: 24px;
+            display: inline-block;
+            animation: bounce 0.5s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from {
+                transform: translateY(0px);
+            }
+            to {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .decorative-stars {
+            font-size: 30px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 시작 화면 -->
+        <div class="start-screen" id="startScreen">
+            <h1>🌟 물리2 토크 마스터 🌟</h1>
+            <div class="scientist-emoji">🔧</div>
+            <div class="decorative-stars">✨ ⭐ 🌟 ⭐ ✨</div>
+            <div class="start-description">
+                <strong>승민쌤 제자가 되어보자! 🎓</strong><br><br>
+                렌치를 돌릴 때 작용하는<br>
+                토크의 크기를 계산해보세요!<br><br>
+                <span style="color: #667eea;">💡 재미있게 배우는 물리학!</span>
+            </div>
+            <button class="start-btn" onclick="startGame()">
+                👨 승민쌤 제자 증명 테스트!
+            </button>
+        </div>
+        
+        <!-- 게임 화면 -->
+        <div class="game-screen" id="gameScreen">
+            <h1>🐰 물리2: 토크 계산 문제 🍀</h1>
+            
+            <div class="problem-box">
+                <div class="problem-text" id="problemText"></div>
+                
+                <div class="diagram">
+                    <canvas id="diagramCanvas" width="400" height="300"></canvas>
+                </div>
+                
+                <div class="values-display" id="valuesDisplay"></div>
+            </div>
+            
+            <div class="input-section">
+                <label for="answer">✨ 돌림힘의 크기는? ✨</label>
+                <div class="choices-container" id="choicesContainer"></div>
+            </div>
+            
+            <div class="button-group">
+                <button class="check-btn" onclick="checkAnswer()">🎯 정답 확인</button>
+                <button class="hint-btn" onclick="showHint()">💡 힌트 보기</button>
+                <button class="new-btn" onclick="newProblem()">🎲 새 문제</button>
+            </div>
+            
+            <button class="chapter-btn" id="chapterBtn" onclick="toggleChapter()">
+                📚 다음 챕터로 넘어가기 (난이도 UP!)
+            </button>
+            
+            <div class="hint" id="hint"></div>
+            <div class="feedback" id="feedback"></div>
+            <div class="solution" id="solution"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentProblem = {};
+        let selectedAnswer = null;
+        let advancedMode = false; // 챕터 모드 (false: 30도만, true: 30,45,60도)
+        
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            advancedMode = false; // 처음엔 기본 모드
+            newProblem();
+        }
+        
+        function toggleChapter() {
+            advancedMode = !advancedMode;
+            const btn = document.getElementById('chapterBtn');
+            const feedback = document.getElementById('feedback');
+            
+            if (advancedMode) {
+                btn.style.background = 'linear-gradient(135deg, #fd79a8 0%, #e84393 100%)';
+                btn.innerHTML = '🔙 기본 모드로 돌아가기 (30°만)';
+                
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '<span class="emoji">🎓</span> 당신 더 높은 문제를 도전하러 왔군요.<br>sin 30°, 45°, 60° 모두 나와요! <span class="emoji">💪</span>';
+            } else {
+                btn.style.background = 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)';
+                btn.innerHTML = '📚 다음 챕터로 넘어가기 (난이도 UP!)';
+                
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '<span class="emoji">😊</span> 기본 모드로 돌아왔어요!<br>sin 30°만 나와요! <span class="emoji">📘</span>';
+            }
+            
+            setTimeout(() => {
+                feedback.className = 'feedback';
+            }, 3000);
+            
+            newProblem();
+        }
+        
+        function newProblem() {
+            // 각도: 기본 모드는 30도만, 고급 모드는 30,45,60도
+            let angle;
+            let distance, force;
+            
+            if (advancedMode) {
+                const angles = [30, 45, 60];
+                angle = angles[Math.floor(Math.random() * angles.length)];
+                
+                // 45도, 60도일 때는 계산이 깔끔하게 떨어지도록 조정
+                if (angle === 45) {
+                    // sin(45°) ≈ 0.707이므로 7의 배수로 설정
+                    const distances45 = [14, 21, 28, 35, 42, 49]; // 7의 배수 (cm)
+                    distance = distances45[Math.floor(Math.random() * distances45.length)];
+                    const forces45 = [10, 20, 30]; // 10의 배수
+                    force = forces45[Math.floor(Math.random() * forces45.length)];
+                } else if (angle === 60) {
+                    // sin(60°) ≈ 0.866이므로 계산이 편한 수로 설정
+                    const distances60 = [10, 20, 30, 40, 50]; // 10의 배수 (cm)
+                    distance = distances60[Math.floor(Math.random() * distances60.length)];
+                    const forces60 = [10, 20, 30]; // 10의 배수
+                    force = forces60[Math.floor(Math.random() * forces60.length)];
+                } else {
+                    // 30도일 때
+                    distance = (Math.floor(Math.random() * 9) + 2) * 5;
+                    force = (Math.floor(Math.random() * 6) + 1) * 5;
+                }
+            } else {
+                // 기본 모드: 30도만
+                angle = 30;
+                distance = (Math.floor(Math.random() * 9) + 2) * 5;
+                force = (Math.floor(Math.random() * 6) + 1) * 5;
+            }
+            
+            currentProblem = {
+                distance: distance,
+                force: force,
+                angle: angle
+            };
+            
+            updateDisplay();
+            generateChoices();
+            clearFeedback();
+            selectedAnswer = null;
+        }
+        
+        function generateChoices() {
+            const { distance, force, angle } = currentProblem;
+            const distanceM = distance / 100;
+            
+            let correctAnswer;
+            let isRootAnswer = false;
+            let rootType = '';
+            let baseValue = 0;
+            
+            // 각도에 따라 정확한 값 계산
+            if (angle === 30) {
+                correctAnswer = force * distanceM * 0.5;
+            } else if (angle === 45) {
+                isRootAnswer = true;
+                rootType = '√2';
+                baseValue = (force * distanceM) / 2;
+                correctAnswer = baseValue * Math.sqrt(2);
+            } else if (angle === 60) {
+                isRootAnswer = true;
+                rootType = '√3';
+                baseValue = (force * distanceM) / 2;
+                correctAnswer = baseValue * Math.sqrt(3);
+            }
+            
+            let choices = [];
+            
+            if (isRootAnswer) {
+                // 루트 답일 때: 기본값의 배수로 계수 생성
+                const rootValue = (rootType === '√2') ? Math.sqrt(2) : Math.sqrt(3);
+                
+                // 정답 계수를 기준으로 다양한 계수 생성
+                const coefficients = [
+                    baseValue * 0.5,
+                    baseValue * 0.75,
+                    baseValue,            // 정답
+                    baseValue * 1.5,
+                    baseValue * 2
+                ];
+                
+                choices = coefficients.map(coef => coef * rootValue);
+                
+            } else {
+                // 30도일 때
+                const wrongAnswers = [];
+                wrongAnswers.push(correctAnswer * 0.8);
+                wrongAnswers.push(correctAnswer * 1.2);
+                wrongAnswers.push(force * distanceM);
+                wrongAnswers.push(correctAnswer * 0.6);
+                
+                choices = [correctAnswer, ...wrongAnswers];
+            }
+            
+            // 중복 제거
+            choices = [...new Set(choices.map(c => parseFloat(c.toFixed(4))))];
+            
+            // 5개가 안 되면 추가
+            while (choices.length < 5) {
+                const offset = (Math.random() - 0.5) * correctAnswer * 0.5;
+                const randomChoice = correctAnswer + offset;
+                const roundedChoice = parseFloat(Math.max(0.01, randomChoice).toFixed(4));
+                if (!choices.includes(roundedChoice)) {
+                    choices.push(roundedChoice);
+                }
+            }
+            
+            // 5개만 선택하고 정렬
+            choices = choices.slice(0, 5).sort((a, b) => a - b);
+            
+            // 선택지 표시
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+            
+            choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                
+                if (isRootAnswer) {
+                    // 루트 형태로 표시
+                    const rootValue = (rootType === '√2') ? Math.sqrt(2) : Math.sqrt(3);
+                    const coefficient = choice / rootValue;
+                    
+                    // 계수가 1이면 숫자 생략 (√2, √3)
+                    let displayText;
+                    if (Math.abs(coefficient - 1) < 0.01) {
+                        displayText = `${rootType} N·m`;
+                    } else if (Math.abs(coefficient % 1) < 0.01) {
+                        // 정수면 소수점 없이
+                        displayText = `${Math.round(coefficient)}${rootType} N·m`;
+                    } else {
+                        displayText = `${coefficient.toFixed(2)}${rootType} N·m`;
+                    }
+                    
+                    button.innerHTML = `<strong>${['①', '②', '③', '④', '⑤'][index]}</strong> ${displayText}`;
+                } else {
+                    button.innerHTML = `<strong>${['①', '②', '③', '④', '⑤'][index]}</strong> ${choice.toFixed(2)} N·m`;
+                }
+                
+                button.onclick = () => selectChoice(choice, button);
+                container.appendChild(button);
+            });
+        }
+        
+        function selectChoice(value, button) {
+            // 모든 버튼 선택 해제
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // 선택한 버튼 활성화
+            button.classList.add('selected');
+            selectedAnswer = value;
+        }
+        
+        function updateDisplay() {
+            const { distance, force, angle } = currentProblem;
+            
+            document.getElementById('problemText').innerHTML = 
+                `다음 그림과 같이 길이 <strong style="color: #ff6b6b;">${distance} cm</strong>인 렌치를 이용하여<br>
+                <strong style="color: #667eea;">${force} N</strong>의 힘을 작용하였을 때<br>
+                너트에 작용하는 <strong>돌림힘의 크기</strong>는 몇 N·m인가? 🔧`;
+            
+            document.getElementById('valuesDisplay').innerHTML = 
+                `📏 주어진 값: 거리 = ${distance} cm, 힘 = ${force} N, 각도 = ${angle}°`;
+            
+            drawDiagram();
+        }
+        
+        function drawDiagram() {
+            const canvas = document.getElementById('diagramCanvas');
+            const ctx = canvas.getContext('2d');
+            const { distance, force, angle } = currentProblem;
+            
+            // 캔버스 초기화
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 회전 중심점 (O) - 왼쪽으로 이동
+            const centerX = 80;
+            const centerY = 150;
+            
+            // 렌치 그리기 (더 사실적으로)
+            const wrenchLength = 250;
+            
+            // 렌치 손잡이 부분
+            const gradient1 = ctx.createLinearGradient(centerX, centerY - 12, centerX + wrenchLength, centerY + 12);
+            gradient1.addColorStop(0, '#bdc3c7');
+            gradient1.addColorStop(0.5, '#95a5a6');
+            gradient1.addColorStop(1, '#7f8c8d');
+            
+            ctx.fillStyle = gradient1;
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(centerX + 30, centerY - 12, wrenchLength - 30, 24, 3);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 렌치 머리 부분 (육각형 느낌)
+            ctx.fillStyle = '#95a5a6';
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 5, centerY - 20);
+            ctx.lineTo(centerX + 35, centerY - 20);
+            ctx.lineTo(centerX + 45, centerY - 12);
+            ctx.lineTo(centerX + 45, centerY + 12);
+            ctx.lineTo(centerX + 35, centerY + 20);
+            ctx.lineTo(centerX - 5, centerY + 20);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 너트 (회전축 O 부분)
+            ctx.fillStyle = '#34495e';
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 회전축 수직선 (점선)
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 60);
+            ctx.lineTo(centerX, centerY + 60);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 중심점 O 표시
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText('O', centerX - 10, centerY + 80);
+            
+            // 거리 표시 (수평 점선)
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 50);
+            ctx.lineTo(centerX + wrenchLength, centerY - 50);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 거리 화살표
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            
+            // 왼쪽 화살표
+            ctx.beginPath();
+            ctx.moveTo(centerX + 5, centerY - 50);
+            ctx.lineTo(centerX + 10, centerY - 55);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(centerX + 5, centerY - 50);
+            ctx.lineTo(centerX + 10, centerY - 45);
+            ctx.stroke();
+            
+            // 오른쪽 화살표
+            ctx.beginPath();
+            ctx.moveTo(centerX + wrenchLength - 5, centerY - 50);
+            ctx.lineTo(centerX + wrenchLength - 10, centerY - 55);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(centerX + wrenchLength - 5, centerY - 50);
+            ctx.lineTo(centerX + wrenchLength - 10, centerY - 45);
+            ctx.stroke();
+            
+            // 거리 텍스트
+            ctx.fillStyle = '#3498db';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`${distance} cm`, centerX + wrenchLength/2 - 25, centerY - 60);
+            
+            // 힘의 작용점에 원 표시
+            const forceX = centerX + wrenchLength;
+            const forceY = centerY;
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.strokeStyle = '#c0392b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(forceX, forceY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 힘의 화살표 (더 깔끔하게)
+            const angleRad = -angle * Math.PI / 180;
+            const arrowLength = 85;
+            const arrowEndX = forceX + arrowLength * Math.cos(angleRad);
+            const arrowEndY = forceY + arrowLength * Math.sin(angleRad);
+            
+            // 화살표 선 (부드럽게)
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(forceX, forceY);
+            ctx.lineTo(arrowEndX, arrowEndY);
+            ctx.stroke();
+            
+            // 화살표 머리 (더 예쁘게)
+            const headLength = 14;
+            const headAngle = Math.PI / 7;
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(arrowEndX, arrowEndY);
+            ctx.lineTo(
+                arrowEndX - headLength * Math.cos(angleRad - headAngle),
+                arrowEndY - headLength * Math.sin(angleRad - headAngle)
+            );
+            ctx.lineTo(
+                arrowEndX - headLength * 0.6 * Math.cos(angleRad),
+                arrowEndY - headLength * 0.6 * Math.sin(angleRad)
+            );
+            ctx.lineTo(
+                arrowEndX - headLength * Math.cos(angleRad + headAngle),
+                arrowEndY - headLength * Math.sin(angleRad + headAngle)
+            );
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 수평 점선 (각도 기준선)
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(forceX, forceY);
+            ctx.lineTo(forceX + 70, forceY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 각도 호 그리기
+            ctx.strokeStyle = '#9b59b6';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(forceX, forceY, 35, angleRad, 0, angleRad < 0);
+            ctx.stroke();
+            
+            // 각도 표시
+            ctx.fillStyle = '#9b59b6';
+            ctx.font = 'bold 16px Arial';
+            const angleTextX = forceX + 45 * Math.cos(angleRad / 2);
+            const angleTextY = forceY + 45 * Math.sin(angleRad / 2);
+            ctx.fillText(`${angle}°`, angleTextX, angleTextY);
+        }
+        
+        function checkAnswer() {
+            const { distance, force, angle } = currentProblem;
+            
+            // 토크 = F × r × sin(θ)
+            // 거리를 m로 변환
+            const distanceM = distance / 100;
+            
+            let correctAnswer;
+            let sinValue, sinValueText;
+            let answerDisplay = '';
+            
+            // 각도에 따라 정확한 값 계산
+            if (angle === 30) {
+                sinValue = 0.5;
+                sinValueText = '1/2';
+                correctAnswer = force * distanceM * 0.5;
+                answerDisplay = `${correctAnswer.toFixed(2)} N·m`;
+            } else if (angle === 45) {
+                sinValue = Math.sqrt(2) / 2;
+                sinValueText = '√2/2';
+                correctAnswer = force * distanceM * (Math.sqrt(2) / 2);
+                const coefficient = (force * distanceM) / 2;
+                // 계수가 1이면 숫자 생략
+                if (Math.abs(coefficient - 1) < 0.01) {
+                    answerDisplay = `√2 N·m`;
+                } else if (Math.abs(coefficient % 1) < 0.01) {
+                    answerDisplay = `${Math.round(coefficient)}√2 N·m`;
+                } else {
+                    answerDisplay = `${coefficient.toFixed(2)}√2 N·m`;
+                }
+            } else if (angle === 60) {
+                sinValue = Math.sqrt(3) / 2;
+                sinValueText = '√3/2';
+                correctAnswer = force * distanceM * (Math.sqrt(3) / 2);
+                const coefficient = (force * distanceM) / 2;
+                // 계수가 1이면 숫자 생략
+                if (Math.abs(coefficient - 1) < 0.01) {
+                    answerDisplay = `√3 N·m`;
+                } else if (Math.abs(coefficient % 1) < 0.01) {
+                    answerDisplay = `${Math.round(coefficient)}√3 N·m`;
+                } else {
+                    answerDisplay = `${coefficient.toFixed(2)}√3 N·m`;
+                }
+            }
+            
+            const feedback = document.getElementById('feedback');
+            const solution = document.getElementById('solution');
+            
+            if (selectedAnswer === null) {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '<span class="emoji">😅</span> 답을 선택해주세요!';
+                solution.classList.remove('show');
+                return;
+            }
+            
+            const tolerance = 0.01;
+            if (Math.abs(selectedAnswer - correctAnswer) < tolerance) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `<span class="emoji">🎉</span> 정답입니다! ${answerDisplay} <span class="emoji">✨</span><br><br><strong style="font-size: 20px;">🏆 승민쌤 제자 인정합니다. 🏆</strong>`;
+                solution.classList.remove('show');
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `<span class="emoji">😢</span> 아쉬워요!<br><br><strong style="font-size: 18px;">💪 리트라이~ 할 수 있구려 💪</strong>`;
+                
+                solution.classList.add('show');
+                solution.innerHTML = `
+                    <div class="solution-title">💡 개념 & 풀이 과정</div>
+                    <div class="solution-text">
+                        <strong style="color: #ff6b6b; font-size: 17px;">📚 토크(돌림힘)의 개념</strong><br>
+                        토크(τ) = F × r × sin(θ)<br>
+                        • F: 작용하는 힘의 크기<br>
+                        • r: 회전축으로부터의 거리<br>
+                        • θ: 힘과 위치벡터 사이의 각도<br>
+                        • 토크는 물체를 회전시키는 효과를 나타내요<br>
+                        • 힘이 수직으로 작용할 때(θ=90°) 토크가 최대!<br><br>
+                        
+                        <strong style="color: #667eea; font-size: 17px;">🔧 실생활 예시</strong><br>
+                        렌치를 사용할 때 손잡이 끝을 잡고 수직으로 힘을 가하면<br>
+                        더 쉽게 너트를 돌릴 수 있어요!<br><br>
+                        
+                        <hr style="border: 1px dashed #ffd93d; margin: 15px 0;">
+                        
+                        <strong>🎯 1단계: 주어진 값 확인</strong><br>
+                        • 거리(r) = ${distance} cm = ${distanceM.toFixed(2)} m<br>
+                        • 힘(F) = ${force} N<br>
+                        • 각도(θ) = ${angle}°<br><br>
+                        
+                        <strong>📐 2단계: 삼각함수 값 계산</strong><br>
+                        sin(${angle}°) = ${sinValueText}<br><br>
+                        
+                        <strong>⚡ 3단계: 토크 공식 적용</strong><br>
+                        τ = F × r × sin(θ)<br>
+                        τ = ${force} × ${distanceM.toFixed(2)} × ${sinValueText}<br>
+                        τ = ${force * distanceM} × ${sinValueText}<br>
+                        τ = <strong style="color: #667eea; font-size: 18px;">${answerDisplay}</strong> 🎯<br><br>
+                        
+                        <strong>💡 꿀팁:</strong><br>
+                        • sin(30°) = 1/2<br>
+                        • sin(45°) = √2/2 → 답을 √2 형태로!<br>
+                        • sin(60°) = √3/2 → 답을 √3 형태로!<br>
+                        • 단위 변환 주의! (cm → m)
+                    </div>
+                `;
+            }
+        }
+        
+        function clearFeedback() {
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('solution').classList.remove('show');
+            document.getElementById('hint').classList.remove('show');
+        }
+        
+        function showHint() {
+            const { distance, force, angle } = currentProblem;
+            const hint = document.getElementById('hint');
+            const feedback = document.getElementById('feedback');
+            const solution = document.getElementById('solution');
+            
+            // 피드백과 풀이는 숨기고 힌트만 표시
+            feedback.className = 'feedback';
+            solution.classList.remove('show');
+            
+            hint.classList.add('show');
+            hint.innerHTML = `
+                <div class="hint-title">💡 승민쌤의 힌트</div>
+                <div class="hint-text">
+                    <strong>🎯 문제 해결 팁:</strong><br><br>
+                    
+                    1️⃣ <strong>토크 공식을 기억하자!</strong><br>
+                    토크(τ) = 힘(F) × 거리(r) × sin(각도)<br><br>
+                    
+                    2️⃣ <strong>단위를 확인하자!</strong><br>
+                    • 거리의 단위가 cm인가요, m인가요?<br>
+                    • 답의 단위는 N·m이에요!<br><br>
+                    
+                    3️⃣ <strong>각도의 사인 값!</strong><br>
+                    • sin(30°) = 1/2<br>
+                    ${advancedMode ? '• sin(45°) = √2/2 ≈ 0.707<br>• sin(60°) = √3/2 ≈ 0.866<br>' : ''}
+                    <br>
+                    <strong style="color: #d63031;">핵심:</strong> ${advancedMode ? '루트 계산을 정확히 하세요!' : '30도일 때 sin 값은 딱 1/2!'} 💪
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

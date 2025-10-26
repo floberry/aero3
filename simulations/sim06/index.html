@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우주 정거장 균형 실험</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: #0a0e27;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 우주 배경 */
+        .space-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+            z-index: -1;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.3),
+                        0 0 100px rgba(99, 102, 241, 0.2);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* 홀로그램 스캔라인 효과 */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+        
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.8)); }
+        }
+        
+        .problem-section {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+        
+        .problem-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+        
+        .diagram {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 20px 10px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 파티클 효과 */
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(59, 130, 246, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 4s linear infinite;
+        }
+        
+        @keyframes particle-float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(20px);
+                opacity: 0;
+            }
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .problem-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #cbd5e1;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px rgba(203, 213, 225, 0.3);
+        }
+        
+        .answer-input-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .answer-input-label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: block;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+        
+        .answer-input-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .answer-input {
+            width: 150px;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #3b82f6;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+            color: #60a5fa;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .answer-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+            transform: scale(1.05);
+        }
+        
+        .unit-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #60a5fa;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-check {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        .btn-check:hover {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.8);
+            transform: translateY(-2px);
+        }
+        
+        .btn-next {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: white;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .btn-next:hover {
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.8);
+            transform: translateY(-2px);
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            line-height: 1.8;
+            display: none;
+            border: 2px solid;
+        }
+        
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .feedback.correct {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border-color: #10b981;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .feedback.wrong {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-color: #ef4444;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+        }
+        
+        /* 축하 애니메이션 */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .celebration.active {
+            display: block;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall 3s linear;
+        }
+        
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .celebration-emoji {
+            font-size: 80px;
+            text-align: center;
+            animation: celebration-bounce 0.5s ease-in-out 3;
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8));
+        }
+        
+        @keyframes celebration-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        /* 실패 캐릭터 */
+        .sad-character {
+            text-align: center;
+            font-size: 100px;
+            animation: sad-shake 0.5s ease-in-out 2;
+            filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.8));
+        }
+        
+        @keyframes sad-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .character-animation {
+            margin: 20px 0;
+        }
+        
+        /* 로딩 애니메이션 */
+        @keyframes balance-in {
+            0% {
+                transform: rotate(-5deg);
+                opacity: 0;
+            }
+            50% {
+                transform: rotate(3deg);
+            }
+            100% {
+                transform: rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .balancing {
+            animation: balance-in 1.5s ease-out;
+        }
+        
+        /* 미세한 호흡 효과 */
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
+        
+        .breathing {
+            animation: breathe 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="space-background"></div>
+    <div class="stars" id="starsContainer"></div>
+    <div class="celebration" id="celebration"></div>
+    
+    <div class="container">
+        <h1>🚀 우주 정거장 균형 실험 🛸</h1>
+        
+        <div class="problem-section">
+            <div class="problem-number" id="problemNumber">미션 1</div>
+            <div class="problem-text" id="problemText"></div>
+            
+            <div class="diagram" id="diagram">
+                <canvas id="diagramCanvas" width="460" height="400"></canvas>
+            </div>
+            
+            <div class="problem-text" id="question"></div>
+            
+            <div class="answer-input-section">
+                <label class="answer-input-label">⚡ 답을 입력하세요 ⚡</label>
+                <div class="answer-input-wrapper">
+                    <input 
+                        type="number" 
+                        class="answer-input" 
+                        id="answerInput" 
+                        placeholder="?" 
+                        min="0"
+                        step="1"
+                    >
+                    <span class="unit-text">N</span>
+                </div>
+            </div>
+            
+            <div class="feedback" id="feedback"></div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-check" id="checkBtn" onclick="checkAnswer()">🎯 정답 확인</button>
+            <button class="btn btn-next" id="nextBtn" onclick="nextProblem()">➡️ 다음 미션</button>
+        </div>
+    </div>
+
+    <script>
+        let problemCount = 1;
+        let currentProblem = null;
+        let particles = [];
+        let isBalancing = false;
+
+        // 별 생성
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                container.appendChild(star);
+            }
+        }
+
+        // 파티클 생성
+        function createParticles() {
+            const diagram = document.getElementById('diagram');
+            setInterval(() => {
+                if (particles.length < 15) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.bottom = '0px';
+                    particle.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                    diagram.appendChild(particle);
+                    particles.push(particle);
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                        particles = particles.filter(p => p !== particle);
+                    }, 5000);
+                }
+            }, 300);
+        }
+
+        // 랜덤 문제 생성 함수
+        function generateRandomProblem() {
+            let weight, multiplier, L, correctAnswer;
+            let attempts = 0;
+            const maxAttempts = 100;
+            
+            // 이름 목록
+            const names = ['은혜', '단비', '수연', '효인', '설화', '수아', '수경', '경미', '지호', '원주'];
+            const randomName = names[Math.floor(Math.random() * names.length)];
+            
+            // 조사 결정 (받침 유무)
+            const namesWith이가 = ['수경', '수연', '효인'];
+            const particle = namesWith이가.includes(randomName) ? '이가' : '가';
+            
+            do {
+                const weights = [20, 30, 40, 50, 60];
+                weight = weights[Math.floor(Math.random() * weights.length)];
+                
+                const multipliers = [2, 3, 4, 5];
+                multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+                
+                const distances = [1, 2, 3];
+                L = distances[Math.floor(Math.random() * distances.length)];
+                
+                correctAnswer = (weight * multiplier / 2) / L;
+                
+                attempts++;
+            } while (!Number.isInteger(correctAnswer) && attempts < maxAttempts);
+            
+            if (!Number.isInteger(correctAnswer)) {
+                weight = 40;
+                multiplier = 2;
+                L = 1;
+                correctAnswer = 40;
+            }
+            
+            return {
+                text: `🛰️ 우주 정거장의 균일한 금속 빔(무게 ${weight} N)이 벽에 고정되어 있습니다. ${randomName}${particle} 빔 끝에서 ${L === 1 ? 'L' : L + 'L'} 떨어진 곳에 무게 W인 우주 화물을 매달았더니 빔이 수평을 이루며 안정되었습니다.`,
+                question: `🎯 ${randomName}${particle} 매단 우주 화물의 무게 W는 얼마인가요?`,
+                name: randomName,
+                particle: particle,
+                L: L,
+                multiplier: multiplier,
+                weight: weight,
+                correctAnswer: correctAnswer
+            };
+        }
+
+        function drawDiagram(problem) {
+            const canvas = document.getElementById('diagramCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const totalLength = problem.L * problem.multiplier;
+            const pixelPerL = Math.min(70, 350 / totalLength);
+            const rodLength = totalLength * pixelPerL;
+            
+            // 시작 위치 조정 (더 중앙으로)
+            const startX = 40;
+            const rodY = 180;
+            
+            // 벽 (미래적 스타일) - 더 크게
+            const gradient = ctx.createLinearGradient(startX - 30, 100, startX - 10, 100);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(1, '#1e40af');
+            ctx.fillStyle = gradient;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#3b82f6';
+            ctx.fillRect(startX - 30, 100, 20, 180);
+            
+            // 벽 글로우 라인
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 3;
+            for(let i = 0; i < 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(startX - 30, 110 + i * 20);
+                ctx.lineTo(startX - 40, 120 + i * 20);
+                ctx.stroke();
+            }
+            
+            ctx.shadowBlur = 0;
+            
+            // 막대 (금속 재질 느낌) - 더 두껍게
+            const rodGradient = ctx.createLinearGradient(startX, rodY - 15, startX, rodY + 15);
+            rodGradient.addColorStop(0, '#94a3b8');
+            rodGradient.addColorStop(0.5, '#cbd5e1');
+            rodGradient.addColorStop(1, '#64748b');
+            ctx.fillStyle = rodGradient;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#3b82f6';
+            ctx.fillRect(startX, rodY - 15, rodLength, 30);
+            ctx.shadowBlur = 0;
+            
+            // 막대 테두리 글로우
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(startX, rodY - 15, rodLength, 30);
+            
+            const centerX = startX + rodLength / 2;
+            const objectX = startX + (problem.L * pixelPerL);
+            const endX = startX + rodLength;
+            
+            // 중심점 (빛나는 점) - 더 크게
+            ctx.beginPath();
+            ctx.arc(centerX, rodY, 7, 0, Math.PI * 2);
+            ctx.fillStyle = '#fbbf24';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#fbbf24';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // L 표시 (홀로그램 스타일) - 위쪽
+            const lLineY = 130;
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#3b82f6';
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(startX, lLineY);
+            ctx.lineTo(objectX, lLineY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+            
+            // L 화살표 - 더 크게
+            ctx.fillStyle = '#3b82f6';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#3b82f6';
+            ctx.beginPath();
+            ctx.moveTo(startX, lLineY);
+            ctx.lineTo(startX + 10, lLineY - 8);
+            ctx.lineTo(startX + 10, lLineY + 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(objectX, lLineY);
+            ctx.lineTo(objectX - 10, lLineY - 8);
+            ctx.lineTo(objectX - 10, lLineY + 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // L 텍스트 - 배경 박스와 함께, 더 크게
+            const lText = problem.L === 1 ? 'L' : problem.L + 'L';
+            const lTextX = (startX + objectX) / 2;
+            ctx.font = 'bold 32px Arial';
+            
+            // 텍스트 배경
+            const lTextWidth = ctx.measureText(lText).width;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+            ctx.fillRect(lTextX - lTextWidth/2 - 10, lLineY - 45, lTextWidth + 20, 40);
+            
+            // 텍스트 테두리
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(lTextX - lTextWidth/2 - 10, lLineY - 45, lTextWidth + 20, 40);
+            
+            // 텍스트
+            ctx.fillStyle = '#60a5fa';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#3b82f6';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(lText, lTextX, lLineY - 25);
+            ctx.shadowBlur = 0;
+            
+            // 전체 길이 표시 - 아래쪽
+            const totalLineY = 240;
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#8b5cf6';
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(startX, totalLineY);
+            ctx.lineTo(endX, totalLineY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+            
+            // 전체 길이 화살표 - 더 크게
+            ctx.fillStyle = '#8b5cf6';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#8b5cf6';
+            ctx.beginPath();
+            ctx.moveTo(startX, totalLineY);
+            ctx.lineTo(startX + 10, totalLineY - 8);
+            ctx.lineTo(startX + 10, totalLineY + 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(endX, totalLineY);
+            ctx.lineTo(endX - 10, totalLineY - 8);
+            ctx.lineTo(endX - 10, totalLineY + 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // 전체 길이 텍스트 - 배경 박스와 함께, 더 크게
+            const totalText = problem.multiplier + 'L';
+            const totalTextX = (startX + endX) / 2;
+            ctx.font = 'bold 32px Arial';
+            
+            // 텍스트 배경
+            const totalTextWidth = ctx.measureText(totalText).width;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+            ctx.fillRect(totalTextX - totalTextWidth/2 - 10, totalLineY + 5, totalTextWidth + 20, 40);
+            
+            // 텍스트 테두리
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(totalTextX - totalTextWidth/2 - 10, totalLineY + 5, totalTextWidth + 20, 40);
+            
+            // 텍스트
+            ctx.fillStyle = '#a78bfa';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#8b5cf6';
+            ctx.fillText(totalText, totalTextX, totalLineY + 25);
+            ctx.shadowBlur = 0;
+            
+            // 물체 (우주 화물 상자) - 더 크게
+            const boxSize = 50;
+            const boxGradient = ctx.createLinearGradient(objectX - boxSize/2, rodY + 15, objectX + boxSize/2, rodY + 15 + boxSize);
+            boxGradient.addColorStop(0, '#1e293b');
+            boxGradient.addColorStop(1, '#0f172a');
+            ctx.fillStyle = boxGradient;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#06b6d4';
+            ctx.fillRect(objectX - boxSize/2, rodY + 15, boxSize, boxSize);
+            
+            // 물체 테두리
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(objectX - boxSize/2, rodY + 15, boxSize, boxSize);
+            ctx.shadowBlur = 0;
+            
+            // W 텍스트 - 더 크게
+            ctx.fillStyle = '#22d3ee';
+            ctx.font = 'bold 28px Arial';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#06b6d4';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('W', objectX, rodY + 15 + boxSize/2);
+            ctx.shadowBlur = 0;
+            
+            // 물체 연결선
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#06b6d4';
+            ctx.beginPath();
+            ctx.moveTo(objectX, rodY + 15);
+            ctx.lineTo(objectX, rodY + 15);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // 막대 무게 표시 - 더 크게
+            const weightText = problem.weight + 'N';
+            ctx.font = 'bold 28px Arial';
+            
+            // 무게 텍스트 배경
+            const weightTextWidth = ctx.measureText(weightText).width;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+            ctx.fillRect(centerX - weightTextWidth/2 - 10, 320, weightTextWidth + 20, 40);
+            
+            // 텍스트 테두리
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(centerX - weightTextWidth/2 - 10, 320, weightTextWidth + 20, 40);
+            
+            // 텍스트
+            ctx.fillStyle = '#f87171';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ef4444';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(weightText, centerX, 340);
+            ctx.shadowBlur = 0;
+            
+            // 무게 화살표 - 더 굵고 길게
+            ctx.strokeStyle = '#ef4444';
+            ctx.fillStyle = '#ef4444';
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(centerX, rodY + 15);
+            ctx.lineTo(centerX, 310);
+            ctx.stroke();
+            
+            // 화살촉 - 더 크게
+            ctx.beginPath();
+            ctx.moveTo(centerX, 310);
+            ctx.lineTo(centerX - 10, 295);
+            ctx.lineTo(centerX + 10, 295);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // 초기화
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+        }
+
+        function loadProblem() {
+            currentProblem = generateRandomProblem();
+            
+            document.getElementById('problemNumber').textContent = `미션 ${problemCount}`;
+            document.getElementById('problemText').textContent = currentProblem.text;
+            document.getElementById('question').textContent = currentProblem.question;
+            
+            // 균형 잡는 애니메이션
+            const canvas = document.getElementById('diagramCanvas');
+            canvas.classList.add('balancing');
+            setTimeout(() => {
+                canvas.classList.remove('balancing');
+                canvas.classList.add('breathing');
+            }, 1500);
+            
+            drawDiagram(currentProblem);
+            
+            document.getElementById('answerInput').value = '';
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('checkBtn').disabled = false;
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('answerInput').focus();
+        }
+
+        function showCelebration() {
+            const celebration = document.getElementById('celebration');
+            celebration.classList.add('active');
+            celebration.innerHTML = '<div class="celebration-emoji">🎉🚀🎊</div>';
+            
+            const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    confetti.style.boxShadow = `0 0 10px ${colors[Math.floor(Math.random() * colors.length)]}`;
+                    celebration.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+            
+            setTimeout(() => {
+                celebration.classList.remove('active');
+                celebration.innerHTML = '';
+            }, 3000);
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answerInput').value);
+            
+            if (isNaN(userAnswer)) {
+                alert('숫자를 입력해주세요!');
+                return;
+            }
+            
+            const feedbackDiv = document.getElementById('feedback');
+            const distanceText = currentProblem.L === 1 ? 'L' : currentProblem.L + 'L';
+            
+            if (userAnswer === currentProblem.correctAnswer) {
+                showCelebration();
+                feedbackDiv.className = 'feedback show correct';
+                feedbackDiv.innerHTML = `
+                    <div class="character-animation">🎉 🥳 🎊</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #6ee7b7; text-align: center; margin: 10px 0;">
+                        🎯 미션 성공! ${currentProblem.name}의 도움으로 우주 정거장이 안정되었습니다! 🎯
+                    </div>
+                    <div class="explanation">
+                        <strong>📐 풀이 과정:</strong><br><br>
+                        <strong>1단계: 돌림힘 평형 조건 적용</strong><br>
+                        우주 정거장의 빔이 정지해 있으므로 회전축을 중심으로<br>
+                        시계방향 돌림힘 = 반시계방향 돌림힘<br><br>
+                        
+                        <strong>2단계: 회전축 선택</strong><br>
+                        고정점(벽)을 회전축으로 선택<br><br>
+                        
+                        <strong>3단계: 돌림힘 계산</strong><br>
+                        • ${currentProblem.name}가 매단 우주 화물 W에 의한 돌림힘: W × ${distanceText}<br>
+                        • 빔 무게에 의한 돌림힘: ${currentProblem.weight}N × ${currentProblem.multiplier}L/2<br>
+                        (∵ 균일한 빔의 무게 중심은 빔 중앙)<br><br>
+                        
+                        <strong>4단계: 식 세우기</strong><br>
+                        W × ${distanceText} = ${currentProblem.weight} × (${currentProblem.multiplier}L/2)<br>
+                        W × ${distanceText} = ${currentProblem.weight} × ${currentProblem.multiplier/2}L<br>
+                        W × ${distanceText} = ${currentProblem.weight * currentProblem.multiplier / 2}L<br><br>
+                        
+                        <strong>5단계: 답 구하기</strong><br>
+                        W = <strong>${currentProblem.correctAnswer} N</strong><br><br>
+                        ✨ ${currentProblem.name} 덕분에 우주 정거장의 균형이 완벽하게 유지되었습니다!
+                    </div>
+                `;
+            } else {
+                feedbackDiv.className = 'feedback show wrong';
+                feedbackDiv.innerHTML = `
+                    <div class="character-animation sad-character">😢</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #fca5a5; text-align: center; margin: 10px 0;">
+                        ⚠️ 우주 정거장이 불안정합니다! 다시 계산해보세요!
+                    </div>
+                    <div style="margin-top: 10px; padding: 15px; background: rgba(16, 185, 129, 0.2); border-radius: 8px; border: 1px solid #10b981;">
+                        <strong style="color: #6ee7b7; font-size: 18px;">정답: ${currentProblem.correctAnswer} N</strong>
+                    </div>
+                    <div class="explanation">
+                        <strong>📐 상세 풀이:</strong><br><br>
+                        <strong>🔑 핵심 개념: 돌림힘 평형</strong><br>
+                        τ (돌림힘) = F (힘) × r (회전축으로부터 거리)<br>
+                        평형 조건: Σ τ_시계방향 = Σ τ_반시계방향<br><br>
+                        
+                        <strong>1단계: 회전축 설정</strong><br>
+                        우주 정거장의 고정점(벽)을 회전축으로 선택합니다.<br>
+                        (∵ 고정점에서의 돌림힘은 0이므로 계산이 간단)<br><br>
+                        
+                        <strong>2단계: 각 힘의 돌림힘 파악</strong><br>
+                        ① 우주 화물 W에 의한 돌림힘<br>
+                        &nbsp;&nbsp;&nbsp;τ₁ = W × ${distanceText} (시계방향 ↻)<br><br>
+                        
+                        ② 빔 무게에 의한 돌림힘<br>
+                        &nbsp;&nbsp;&nbsp;빔은 균일하므로 무게 중심 = 빔 중앙<br>
+                        &nbsp;&nbsp;&nbsp;중심까지 거리 = ${currentProblem.multiplier}L ÷ 2 = ${currentProblem.multiplier/2}L<br>
+                        &nbsp;&nbsp;&nbsp;τ₂ = ${currentProblem.weight}N × ${currentProblem.multiplier/2}L = ${currentProblem.weight * currentProblem.multiplier / 2}L (시계방향 ↻)<br><br>
+                        
+                        <strong>3단계: 평형 조건 적용</strong><br>
+                        빔이 고정점을 중심으로 회전하지 않으려면<br>
+                        우주 화물 W의 돌림힘 = 빔 무게의 돌림힘<br><br>
+                        
+                        <strong>4단계: 식 정리</strong><br>
+                        W × ${distanceText} = ${currentProblem.weight}N × ${currentProblem.multiplier/2}L<br>
+                        W × ${distanceText} = ${currentProblem.weight * currentProblem.multiplier / 2}L<br>
+                        ${currentProblem.L !== 1 ? `W × ${currentProblem.L}L = ${currentProblem.weight * currentProblem.multiplier / 2}L<br>` : ''}
+                        ${currentProblem.L !== 1 ? `양변을 ${currentProblem.L}L로 나누면:<br>` : '양변을 L로 나누면:<br>'}
+                        W = ${currentProblem.weight * currentProblem.multiplier / 2 / currentProblem.L}N<br><br>
+                        
+                        <strong style="color: #6ee7b7; font-size: 18px;">∴ W = ${currentProblem.correctAnswer} N</strong><br><br>
+                        
+                        <strong>💡 핵심 포인트:</strong><br>
+                        • 균일한 빔의 무게는 중심에 작용<br>
+                        • 돌림힘 = 힘 × 수직거리<br>
+                        • 평형: 시계방향 = 반시계방향<br>
+                        🚀 우주 정거장의 안정성을 유지하는 것이 중요합니다!
+                    </div>
+                `;
+            }
+            
+            document.getElementById('checkBtn').disabled = true;
+            document.getElementById('answerInput').disabled = true;
+        }
+
+        function nextProblem() {
+            problemCount++;
+            loadProblem();
+        }
+
+        // Enter 키로 정답 확인
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('checkBtn').disabled) {
+                checkAnswer();
+            }
+        });
+
+        // 초기화
+        createStars();
+        createParticles();
+        loadProblem();
+    </script>
+</body>
+</html>

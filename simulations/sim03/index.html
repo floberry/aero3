@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>돌림힘 문제 시뮬레이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .problem-area {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .problem-text {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .highlight {
+            color: #667eea;
+            font-weight: bold;
+        }
+        .diagram {
+            width: 100%;
+            height: 200px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .input-area {
+            margin: 20px 0;
+        }
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .choice-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        .choice-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(5px);
+        }
+        .choice-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .check-btn {
+            background: #667eea;
+            color: white;
+        }
+        .check-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .new-btn {
+            background: #48bb78;
+            color: white;
+        }
+        .new-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+        .correct {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+        .incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+        .solution {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff5e6;
+            border-radius: 10px;
+            border-left: 4px solid #f6ad55;
+        }
+        .solution h3 {
+            color: #c05621;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .solution p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ 돌림힘 문제</h1>
+        
+        <div class="problem-area">
+            <div class="problem-text" id="problemText"></div>
+            <div class="diagram">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="choices" id="choices"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="check-btn" onclick="checkAnswer()">정답 확인</button>
+            <button class="new-btn" onclick="newProblem()">새 문제</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        let currentProblem = {};
+        let selectedAnswer = null;
+
+        function generateProblem() {
+            const distance = Math.floor(Math.random() * 30) + 10; // 10-39 cm
+            const force = Math.floor(Math.random() * 20) + 5; // 5-24 N
+            const angles = [30, 45, 60];
+            const angle = angles[Math.floor(Math.random() * angles.length)];
+            
+            // 돌림힘 = r × F × sin(θ)
+            const distanceM = distance / 100; // cm to m
+            const angleRad = angle * Math.PI / 180;
+            const torque = distanceM * force * Math.sin(angleRad);
+            
+            // 선택지 생성 (정답 포함 3개)
+            const choices = generateChoices(torque);
+            
+            currentProblem = {
+                distance: distance,
+                force: force,
+                angle: angle,
+                torque: torque,
+                choices: choices
+            };
+            
+            selectedAnswer = null;
+            displayProblem();
+            displayChoices();
+            drawDiagram();
+        }
+
+        function generateChoices(correctAnswer) {
+            const choices = [correctAnswer];
+            
+            // 오답 생성
+            while (choices.length < 3) {
+                let wrongAnswer;
+                const rand = Math.random();
+                
+                if (rand < 0.33) {
+                    // 각도를 고려하지 않은 답 (sin 없이)
+                    wrongAnswer = correctAnswer / Math.sin(currentProblem.angle * Math.PI / 180);
+                } else if (rand < 0.66) {
+                    // 약간 다른 값
+                    wrongAnswer = correctAnswer * (0.5 + Math.random() * 1.5);
+                } else {
+                    // cm를 m로 변환하지 않은 답
+                    wrongAnswer = correctAnswer * 100;
+                }
+                
+                wrongAnswer = Math.round(wrongAnswer * 100) / 100;
+                
+                // 중복 체크
+                if (!choices.includes(wrongAnswer) && wrongAnswer > 0 && wrongAnswer !== correctAnswer) {
+                    choices.push(wrongAnswer);
+                }
+            }
+            
+            // 선택지 섞기
+            return choices.sort(() => Math.random() - 0.5);
+        }
+
+        function displayChoices() {
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            const circledNumbers = ['①', '②', '③'];
+            
+            currentProblem.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerHTML = `<strong>${circledNumbers[index]}</strong> ${choice.toFixed(2)} N·m`;
+                btn.onclick = () => selectChoice(choice, btn);
+                choicesDiv.appendChild(btn);
+            });
+        }
+
+        function selectChoice(answer, btnElement) {
+            // 모든 버튼에서 selected 클래스 제거
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // 선택한 버튼에 selected 클래스 추가
+            btnElement.classList.add('selected');
+            selectedAnswer = answer;
+        }
+
+        function displayProblem() {
+            const problemText = `
+                다음 그림과 같이 길이 <span class="highlight">${currentProblem.distance} cm</span>인 렌치를 이용해 
+                <span class="highlight">${currentProblem.force} N</span>의 힘을 작용하였을 때 
+                너트에 작용하는 돌림힘의 크기는 몇 N·m인가?
+                <br><br>
+                (힘의 방향은 렌치와 <span class="highlight">${currentProblem.angle}°</span>를 이룬다)
+            `;
+            document.getElementById('problemText').innerHTML = problemText;
+        }
+
+        function drawDiagram() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 캔버스 크기 설정
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const centerX = 80;
+            const centerY = canvas.height / 2;
+            const wrenchLength = 200;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 렌치 그리기
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX + wrenchLength, centerY);
+            ctx.stroke();
+            
+            // 너트 (원) 그리기
+            ctx.fillStyle = '#888';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 손잡이 끝 원 그리기
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(centerX + wrenchLength, centerY, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 힘 화살표 그리기
+            const angleRad = currentProblem.angle * Math.PI / 180;
+            const arrowLength = 80;
+            const endX = centerX + wrenchLength + arrowLength * Math.cos(angleRad);
+            const endY = centerY - arrowLength * Math.sin(angleRad);
+            
+            ctx.strokeStyle = '#f56565';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX + wrenchLength, centerY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            
+            // 화살촉
+            const arrowHeadLen = 15;
+            const arrowAngle = Math.PI / 6;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowHeadLen * Math.cos(angleRad - arrowAngle),
+                endY + arrowHeadLen * Math.sin(angleRad - arrowAngle)
+            );
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowHeadLen * Math.cos(angleRad + arrowAngle),
+                endY + arrowHeadLen * Math.sin(angleRad + arrowAngle)
+            );
+            ctx.stroke();
+            
+            // 거리 표시
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(`${currentProblem.distance} cm`, centerX + wrenchLength/2 - 20, centerY - 20);
+            
+            // 힘 표시
+            ctx.fillStyle = '#f56565';
+            ctx.fillText(`F = ${currentProblem.force} N`, endX - 20, endY - 10);
+            
+            // 각도 표시
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX + wrenchLength, centerY, 30, -angleRad, 0, false);
+            ctx.stroke();
+            ctx.fillStyle = '#667eea';
+            ctx.fillText(`${currentProblem.angle}°`, centerX + wrenchLength + 35, centerY - 5);
+        }
+
+        function checkAnswer() {
+            const feedback = document.getElementById('feedback');
+            
+            if (selectedAnswer === null) {
+                feedback.className = 'feedback incorrect';
+                feedback.style.display = 'block';
+                feedback.innerHTML = '❌ 답을 선택해주세요!';
+                return;
+            }
+            
+            const tolerance = 0.01;
+            const isCorrect = Math.abs(selectedAnswer - currentProblem.torque) < tolerance;
+            
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `
+                    ✅ 정답입니다!
+                    <div class="solution">
+                        <h3>💡 풀이:</h3>
+                        <p><strong>1단계: 공식 확인</strong></p>
+                        <p>돌림힘 τ = r × F × sin(θ)</p>
+                        <p><strong>2단계: 단위 변환</strong></p>
+                        <p>r = ${currentProblem.distance} cm = ${currentProblem.distance/100} m</p>
+                        <p><strong>3단계: 값 대입</strong></p>
+                        <p>τ = ${currentProblem.distance/100} m × ${currentProblem.force} N × sin(${currentProblem.angle}°)</p>
+                        <p>τ = ${currentProblem.distance/100} × ${currentProblem.force} × ${Math.sin(currentProblem.angle * Math.PI / 180).toFixed(4)}</p>
+                        <p><strong>정답: ${currentProblem.torque.toFixed(2)} N·m</strong></p>
+                    </div>
+                `;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `
+                    ❌ 틀렸습니다. 다시 시도해보세요!
+                    <div class="solution">
+                        <h3>💡 풀이:</h3>
+                        <p><strong>1단계: 공식 확인</strong></p>
+                        <p>돌림힘 τ = r × F × sin(θ)</p>
+                        <p>• r: 회전축에서 힘의 작용점까지의 거리 (m 단위로 변환!)</p>
+                        <p>• F: 힘의 크기 (N)</p>
+                        <p>• θ: 힘의 방향과 렌치가 이루는 각도</p>
+                        <p><strong>2단계: 단위 변환</strong></p>
+                        <p>r = ${currentProblem.distance} cm = ${currentProblem.distance/100} m</p>
+                        <p><strong>3단계: 값 대입</strong></p>
+                        <p>τ = ${currentProblem.distance/100} m × ${currentProblem.force} N × sin(${currentProblem.angle}°)</p>
+                        <p>τ = ${currentProblem.distance/100} × ${currentProblem.force} × ${Math.sin(currentProblem.angle * Math.PI / 180).toFixed(4)}</p>
+                        <p><strong>정답: ${currentProblem.torque.toFixed(2)} N·m</strong></p>
+                    </div>
+                `;
+            }
+            
+            feedback.style.display = 'block';
+        }
+
+        function newProblem() {
+            document.getElementById('feedback').style.display = 'none';
+            generateProblem();
+        }
+
+        // 초기 문제 생성
+        window.onload = function() {
+            generateProblem();
+        };
+
+        // 캔버스 크기 조정
+        window.addEventListener('resize', drawDiagram);
+    </script>
+</body>
+</html>
