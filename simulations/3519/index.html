@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>알짜힘 구하기 연습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Jost:wght@500;600;700&family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#eceef1;
+    --bg2:#ffffff;
+    --bg3:#dcdfe3;
+    --paper:#ffffff;
+    --ink:#1c1d20;
+    --sub:#787b82;
+    --line:#e4e5e8;
+    --accent:#111214;
+    --ok:#bfe3cf;
+    --ok-ink:#2f7a52;
+    --bad:#f1c6cc;
+    --bad-ink:#a8394a;
+    --f1:#15161a;
+    --f2:#7c828d;
+    --f3:#ffffff;
+    --f3-stroke:#15161a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;color:var(--ink);
+    font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:radial-gradient(circle at 25% 10%, #ffffff 0%, #eceef1 45%, #d7dade 100%);
+    min-height:100vh;}
+  .wrap{max-width:460px;margin:0 auto;min-height:100vh;padding:20px 14px 40px;
+    display:flex;flex-direction:column;gap:16px;}
+  header{text-align:center;padding:6px 0 2px;}
+  header .eyebrow{font-family:"Jost",sans-serif;font-size:11px;letter-spacing:4px;
+    color:var(--sub);text-transform:uppercase;margin-bottom:4px;}
+  header h1{font-family:"Jua",sans-serif;font-weight:400;font-size:24px;margin:0 0 6px;
+    color:var(--ink);letter-spacing:0px;}
+  header p{margin:0;font-size:12.5px;color:var(--sub);line-height:1.6;}
+
+  .card{background:var(--paper);border-radius:22px;
+    padding:20px 18px;border:1px solid var(--line);
+    box-shadow:0 16px 40px rgba(20,20,25,0.10), 0 2px 6px rgba(20,20,25,0.05);}
+
+  .problem-text{font-size:14px;line-height:1.7;margin:0 0 14px;color:var(--ink);}
+  .problem-text b{color:var(--accent);font-weight:800;}
+
+  .clockwrap{display:flex;flex-direction:column;align-items:center;}
+  .stage{position:relative;width:100%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;
+    background:radial-gradient(circle at 50% 42%, #faf7f0 0%, #f2ede2 70%, #e7e0d2 100%);
+    border:14px solid #17181b;
+    box-shadow:
+      0 18px 30px rgba(0,0,0,0.28),
+      inset 0 0 0 3px #3c3d41,
+      inset 0 2px 10px rgba(255,255,255,0.35),
+      inset 0 -10px 22px rgba(0,0,0,0.18);}
+  svg{display:block;width:100%;height:auto;position:relative;z-index:1;}
+
+  .legend{display:flex;justify-content:center;gap:18px;margin-top:16px;font-size:12.5px;color:var(--sub);flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-weight:700;}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block;border:1.5px solid rgba(0,0,0,0.15);}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  .choice{border:1.6px solid var(--line);background:#fbfbfc;border-radius:13px;
+    padding:13px 8px;text-align:center;font-size:16px;font-weight:400;color:var(--ink);
+    cursor:pointer;user-select:none;transition:all .15s;font-family:"Jua",sans-serif;}
+  .choice:active{transform:scale(0.97);}
+  .choice.selected{border-color:var(--accent);background:#111214;color:#fff;}
+  .choice.correct{border-color:var(--ok-ink);background:#eef8f1;color:var(--ok-ink);}
+  .choice.wrong{border-color:var(--bad-ink);background:#fdeef0;color:var(--bad-ink);}
+  .choice.disabled{pointer-events:none;}
+
+  .btnrow{display:flex;gap:10px;margin-top:16px;}
+  button.action{flex:1;border-radius:13px;padding:13px 10px;
+    font-size:16.5px;font-weight:400;cursor:pointer;transition:filter .15s, transform .05s;
+    font-family:"Jua",sans-serif;letter-spacing:0px;}
+  button.action:active{transform:scale(0.98);}
+  #newBtn{background:#ffffff;color:var(--ink);border:1.6px solid #d4d5d9;}
+  #checkBtn{background:#111214;color:#ffffff;border:1.6px solid #111214;}
+  #checkBtn:disabled{opacity:0.35;}
+
+  .result{margin-top:14px;border-radius:13px;padding:13px 14px;font-size:13.5px;
+    line-height:1.6;display:none;}
+  .result.show{display:block;}
+  .result.ok{background:#eef8f1;border:1.6px solid #cdeada;}
+  .result.bad{background:#fdeef0;border:1.6px solid #f6cdd4;}
+  .result .verdict{font-family:"Jua",sans-serif;font-weight:400;font-size:17px;margin-bottom:6px;}
+  .result.ok .verdict{color:var(--ok-ink);}
+  .result.bad .verdict{color:var(--bad-ink);}
+  .sol-line{margin:4px 0;}
+  .sol-line b{color:var(--ink);}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;}
+
+  footer{text-align:center;font-size:11px;color:var(--sub);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">FORCE · CLOCK</div>
+    <h1>알짜힘(합력) 구하기 연습</h1>
+    <p>마찰이 없는 평면 위 물체 A에 세 힘 F₁, F₂, F₃가 작용합니다.<br>격자 한 칸 = 1N 입니다.</p>
+  </header>
+
+  <div class="card">
+    <p class="problem-text">그림과 같이 마찰이 없는 평면에 놓인 물체 <b>A</b>에 평면과 나란한 방향으로 일정한 힘 F₁, F₂, F₃이 작용한다. <b>A에 작용하는 알짜힘의 크기는?</b> (단, A의 크기는 무시한다.)</p>
+
+    <div class="clockwrap">
+      <div class="stage">
+        <svg id="svg" viewBox="0 0 320 320"></svg>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="dot" style="background:var(--f1)"></i>F₁</span>
+      <span><i class="dot" style="background:var(--f2)"></i>F₂</span>
+      <span><i class="dot" style="background:var(--f3);border-color:#15161a;"></i>F₃</span>
+    </div>
+
+    <div class="choices" id="choices"></div>
+
+    <div class="btnrow">
+      <button class="action" id="newBtn">새 문제</button>
+      <button class="action" id="checkBtn" disabled>확인</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="verdict" id="verdict"></div>
+      <div id="solution"></div>
+    </div>
+  </div>
+
+  <footer>연습용 시뮬레이션 · 매번 다른 값으로 무한 연습이 가능해요</footer>
+</div>
+
+<script>
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById('svg');
+const choicesEl = document.getElementById('choices');
+const newBtn = document.getElementById('newBtn');
+const checkBtn = document.getElementById('checkBtn');
+const resultEl = document.getElementById('result');
+const verdictEl = document.getElementById('verdict');
+const solutionEl = document.getElementById('solution');
+
+const UNIT = 25;      // px per 1N grid square
+const CENTER = 160;   // svg center (viewBox 320x320)
+const RANGE = 5;      // grid extends -5..5
+
+let state = { f1:null, f2:null, f3:null, correctIdx:null, choices:[], selected:null, checked:false };
+
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// pick a nonzero integer vector, components in [-4,4], magnitude between 2 and 5
+function randVector(){
+  let x,y;
+  do{
+    x = rnd(-4,4); y = rnd(-4,4);
+  }while(x===0 && y===0 || (x*x+y*y) > 25 || (x*x+y*y) < 4);
+  return {x,y};
+}
+
+function simplifySqrt(n){
+  if(n===0) return {coeff:0, rad:1};
+  let coeff=1, rad=n;
+  for(let i=Math.floor(Math.sqrt(n)); i>=2; i--){
+    if(n % (i*i) === 0){ coeff=i; rad = n/(i*i); break; }
+  }
+  return {coeff, rad};
+}
+
+function formatMag(nSquared){
+  const {coeff, rad} = simplifySqrt(nSquared);
+  if(rad===1) return coeff + "N";
+  const c = coeff===1 ? "" : coeff;
+  return c + "\u221A" + rad + " N";
+}
+
+function generateProblem(){
+  state.f1 = randVector();
+  state.f2 = randVector();
+  state.f3 = randVector();
+
+  const Fx = state.f1.x + state.f2.x + state.f3.x;
+  const Fy = state.f1.y + state.f2.y + state.f3.y;
+  const S = Fx*Fx + Fy*Fy;
+
+  state.Fx = Fx; state.Fy = Fy; state.S = S;
+
+  const candidateSet = new Set([S]);
+  let tries = 0;
+  while(candidateSet.size < 5 && tries < 200){
+    tries++;
+    const modeI = rnd(0,4);
+    let cand;
+    if(modeI===0) cand = S + rnd(1,6);
+    else if(modeI===1) cand = Math.max(1, S - rnd(1,6));
+    else if(modeI===2) cand = Math.max(1, S*2 - rnd(0,4));
+    else if(modeI===3) cand = Math.max(1, Math.round(S/2) + rnd(-2,3));
+    else cand = Math.max(1, (Fx+rnd(-2,2))**2 + (Fy+rnd(-2,2))**2);
+    if(cand<=0) continue;
+    const text = formatMag(cand);
+    let dup = false;
+    for(const s of candidateSet){ if(formatMag(s)===text) dup = true; }
+    if(!dup) candidateSet.add(cand);
+  }
+  let candArr = Array.from(candidateSet);
+  while(candArr.length < 5){
+    const extra = Math.max(1, S + rnd(-10,10));
+    const text = formatMag(extra);
+    if(!candArr.some(s=>formatMag(s)===text)) candArr.push(extra);
+  }
+  candArr = candArr.slice(0,5);
+  for(let i=candArr.length-1;i>0;i--){
+    const j = rnd(0,i);
+    [candArr[i],candArr[j]] = [candArr[j],candArr[i]];
+  }
+  state.choices = candArr;
+  state.correctIdx = candArr.indexOf(S);
+  state.selected = null;
+  state.checked = false;
+
+  drawDiagram();
+  renderChoices();
+  checkBtn.disabled = true;
+  resultEl.classList.remove('show','ok','bad');
+}
+
+function drawDiagram(){
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const defs = document.createElementNS(svgNS,'defs');
+  ['f1','f2','f3'].forEach(key=>{
+    const marker = document.createElementNS(svgNS,'marker');
+    marker.setAttribute('id','arrow-'+key);
+    marker.setAttribute('viewBox','0 0 10 10');
+    marker.setAttribute('refX','8'); marker.setAttribute('refY','5');
+    marker.setAttribute('markerWidth','7'); marker.setAttribute('markerHeight','7');
+    marker.setAttribute('orient','auto-start-reverse');
+    const path = document.createElementNS(svgNS,'path');
+    path.setAttribute('d','M0,0 L10,5 L0,10 z');
+    path.setAttribute('fill', getColor(key));
+    if(key==='f3'){ path.setAttribute('stroke','#15161a'); path.setAttribute('stroke-width','1'); }
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  });
+  svg.appendChild(defs);
+
+  // faint grid (for reading N values)
+  const grid = document.createElementNS(svgNS,'g');
+  for(let i=-RANGE;i<=RANGE;i++){
+    const line1 = document.createElementNS(svgNS,'line');
+    line1.setAttribute('x1', CENTER + i*UNIT); line1.setAttribute('y1', CENTER - RANGE*UNIT);
+    line1.setAttribute('x2', CENTER + i*UNIT); line1.setAttribute('y2', CENTER + RANGE*UNIT);
+    line1.setAttribute('stroke', i===0 ? '#c7c1b0' : '#e3ddcd');
+    line1.setAttribute('stroke-width', i===0 ? '1.3' : '0.8');
+    grid.appendChild(line1);
+
+    const line2 = document.createElementNS(svgNS,'line');
+    line2.setAttribute('x1', CENTER - RANGE*UNIT); line2.setAttribute('y1', CENTER + i*UNIT);
+    line2.setAttribute('x2', CENTER + RANGE*UNIT); line2.setAttribute('y2', CENTER + i*UNIT);
+    line2.setAttribute('stroke', i===0 ? '#c7c1b0' : '#e3ddcd');
+    line2.setAttribute('stroke-width', i===0 ? '1.3' : '0.8');
+    grid.appendChild(line2);
+  }
+  svg.appendChild(grid);
+
+  // clock numerals ring (like the reference alarm clock dial)
+  const numR = 138;
+  const tickOuter = 152, tickInner1 = 141, tickInner2 = 146;
+  const ticks = document.createElementNS(svgNS,'g');
+  for(let i=0;i<60;i++){
+    const ang = (i*6 - 90) * Math.PI/180;
+    const isHour = i%5===0;
+    const rI = isHour ? tickInner1 : tickInner2;
+    const x1 = CENTER + tickOuter*Math.cos(ang), y1 = CENTER + tickOuter*Math.sin(ang);
+    const x2 = CENTER + rI*Math.cos(ang), y2 = CENTER + rI*Math.sin(ang);
+    const t = document.createElementNS(svgNS,'line');
+    t.setAttribute('x1',x1); t.setAttribute('y1',y1);
+    t.setAttribute('x2',x2); t.setAttribute('y2',y2);
+    t.setAttribute('stroke', isHour ? '#232428' : '#8b8b88');
+    t.setAttribute('stroke-width', isHour ? '2.2' : '1');
+    t.setAttribute('stroke-linecap','round');
+    ticks.appendChild(t);
+  }
+  svg.appendChild(ticks);
+
+  const nums = document.createElementNS(svgNS,'g');
+  for(let i=1;i<=12;i++){
+    const ang = (i*30 - 90) * Math.PI/180;
+    const x = CENTER + numR*Math.cos(ang), y = CENTER + numR*Math.sin(ang);
+    const t = document.createElementNS(svgNS,'text');
+    t.setAttribute('x',x); t.setAttribute('y',y+5);
+    t.setAttribute('font-size','15'); t.setAttribute('font-weight','700');
+    t.setAttribute('fill','#232428'); t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-family','Jost, sans-serif');
+    t.textContent = i;
+    nums.appendChild(t);
+  }
+  svg.appendChild(nums);
+
+  // small brand label like "QUARTZ"
+  const brand = document.createElementNS(svgNS,'text');
+  brand.setAttribute('x', CENTER); brand.setAttribute('y', CENTER+42);
+  brand.setAttribute('font-size','8.5'); brand.setAttribute('fill','#8b8b88');
+  brand.setAttribute('text-anchor','middle'); brand.setAttribute('letter-spacing','2');
+  brand.setAttribute('font-family','Jost, sans-serif');
+  brand.textContent = 'PHYSICS LAB';
+  svg.appendChild(brand);
+
+  // point A (clock center pin)
+  const aRing = document.createElementNS(svgNS,'circle');
+  aRing.setAttribute('cx',CENTER); aRing.setAttribute('cy',CENTER);
+  aRing.setAttribute('r','7.5'); aRing.setAttribute('fill','#f6f1e6');
+  aRing.setAttribute('stroke','#15161a'); aRing.setAttribute('stroke-width','1.8');
+  svg.appendChild(aRing);
+  const aCircle = document.createElementNS(svgNS,'circle');
+  aCircle.setAttribute('cx',CENTER); aCircle.setAttribute('cy',CENTER);
+  aCircle.setAttribute('r','2.8'); aCircle.setAttribute('fill','#15161a');
+  svg.appendChild(aCircle);
+  const aLabel = document.createElementNS(svgNS,'text');
+  aLabel.setAttribute('x', CENTER+12); aLabel.setAttribute('y', CENTER-12);
+  aLabel.setAttribute('font-size','13'); aLabel.setAttribute('font-weight','700');
+  aLabel.setAttribute('fill','#15161a');
+  aLabel.textContent = 'A';
+  svg.appendChild(aLabel);
+
+  drawVector(state.f1, 'f1', 'F\u2081');
+  drawVector(state.f2, 'f2', 'F\u2082');
+  drawVector(state.f3, 'f3', 'F\u2083');
+
+  // scale indicator "1N"
+  const scaleLabel = document.createElementNS(svgNS,'text');
+  scaleLabel.setAttribute('x', CENTER + RANGE*UNIT - UNIT/2);
+  scaleLabel.setAttribute('y', CENTER + RANGE*UNIT + 20);
+  scaleLabel.setAttribute('font-size','9.5');
+  scaleLabel.setAttribute('fill','#9a968a');
+  scaleLabel.setAttribute('text-anchor','middle');
+  scaleLabel.textContent = '\u25C0 1N \u25B6';
+  svg.appendChild(scaleLabel);
+}
+
+function getColor(key){
+  return key==='f1' ? '#15161a' : key==='f2' ? '#7c828d' : '#ffffff';
+}
+
+function drawVector(v, key, label){
+  const dx = v.x*UNIT;
+  const dy = -v.y*UNIT;
+  const norm = Math.hypot(dx,dy);
+  const ux = dx/norm, uy = dy/norm;
+  const HUB = 7.5;   // matches the center pin ring radius, so every hand starts on it
+
+  const tipX = CENTER + dx, tipY = CENTER + dy;
+  const tailX = CENTER + ux*HUB, tailY = CENTER + uy*HUB;
+
+  const line = document.createElementNS(svgNS,'line');
+  line.setAttribute('x1', tailX); line.setAttribute('y1', tailY);
+  line.setAttribute('x2', tipX); line.setAttribute('y2', tipY);
+  line.setAttribute('stroke', getColor(key));
+  line.setAttribute('stroke-width', key==='f2' ? '2.4' : '3.2');
+  line.setAttribute('stroke-linecap','round');
+  if(key==='f3'){
+    line.setAttribute('stroke','#ffffff');
+  }
+  line.setAttribute('marker-end', 'url(#arrow-'+key+')');
+  svg.appendChild(line);
+
+  if(key==='f3'){
+    // outline so the white hand stays visible on the cream face
+    const outline = document.createElementNS(svgNS,'line');
+    outline.setAttribute('x1', tailX); outline.setAttribute('y1', tailY);
+    outline.setAttribute('x2', tipX); outline.setAttribute('y2', tipY);
+    outline.setAttribute('stroke', '#15161a');
+    outline.setAttribute('stroke-width','5.2');
+    outline.setAttribute('stroke-linecap','round');
+    outline.setAttribute('opacity','1');
+    svg.insertBefore(outline, line);
+  }
+
+  const lx = tipX + (v.x>=0?12:-12);
+  const ly = tipY + (v.y>=0?-10:16);
+  const labelColor = key==='f3' ? '#15161a' : getColor(key);
+  const text = document.createElementNS(svgNS,'text');
+  text.setAttribute('x', lx); text.setAttribute('y', ly);
+  text.setAttribute('font-size','15'); text.setAttribute('font-weight','800');
+  text.setAttribute('fill', labelColor);
+  text.setAttribute('text-anchor', v.x>=0 ? 'start':'end');
+  text.textContent = label;
+  svg.appendChild(text);
+}
+
+function renderChoices(){
+  choicesEl.innerHTML = '';
+  const circled = ['\u2460','\u2461','\u2462','\u2463','\u2464'];
+  state.choices.forEach((s, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'choice';
+    div.textContent = circled[idx] + ' ' + formatMag(s);
+    div.addEventListener('click', ()=>{
+      if(state.checked) return;
+      state.selected = idx;
+      checkBtn.disabled = false;
+      Array.from(choicesEl.children).forEach(c=>c.classList.remove('selected'));
+      div.classList.add('selected');
+    });
+    choicesEl.appendChild(div);
+  });
+}
+
+function checkAnswer(){
+  if(state.selected===null || state.checked) return;
+  state.checked = true;
+  const isCorrect = state.selected === state.correctIdx;
+
+  Array.from(choicesEl.children).forEach((c,idx)=>{
+    c.classList.add('disabled');
+    if(idx===state.correctIdx) c.classList.add('correct');
+    else if(idx===state.selected && !isCorrect) c.classList.add('wrong');
+  });
+
+  const {rad} = simplifySqrt(state.S);
+  const magText = formatMag(state.S);
+
+  verdictEl.textContent = isCorrect ? '정답입니다!' : '오답입니다.';
+  resultEl.classList.remove('ok','bad');
+  resultEl.classList.add(isCorrect ? 'ok' : 'bad', 'show');
+
+  solutionEl.innerHTML =
+    `<div class="sol-line"><b>① 힘 성분</b><br>` +
+    `F₁ = (${state.f1.x}, ${state.f1.y}) N, F₂ = (${state.f2.x}, ${state.f2.y}) N, F₃ = (${state.f3.x}, ${state.f3.y}) N</div>` +
+    `<div class="sol-line"><b>② x, y 성분의 합</b><br>` +
+    `<span class="mono">Fx = ${state.f1.x} + (${state.f2.x}) + (${state.f3.x}) = ${state.Fx}</span><br>` +
+    `<span class="mono">Fy = ${state.f1.y} + (${state.f2.y}) + (${state.f3.y}) = ${state.Fy}</span></div>` +
+    `<div class="sol-line"><b>③ 알짜힘의 크기</b><br>` +
+    `<span class="mono">F = \u221A(Fx\u00B2 + Fy\u00B2) = \u221A(${state.Fx}\u00B2 + ${state.Fy}\u00B2) = \u221A${state.S}` +
+    (rad!==state.S ? ` = ${magText}` : ` N`) + `</span></div>` +
+    `<div class="sol-line">정답: <b>${magText}</b></div>`;
+}
+
+newBtn.addEventListener('click', generateProblem);
+checkBtn.addEventListener('click', checkAnswer);
+
+generateProblem();
+</script>
+</body>
+</html>

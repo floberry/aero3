@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>궤도 스테이션 — A의 질량 구하기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* default (light-ish "daylight nebula") palette */
+    --bg: #EEF0FB;
+    --bg-deep: #E3E6F7;
+    --card: rgba(255,255,255,0.72);
+    --card-border: rgba(108,79,209,0.18);
+    --ink: #1C1E33;
+    --ink-soft: #5B5F82;
+    --violet: #6C4FD1;
+    --violet-deep: #4C36A6;
+    --cyan: #12A79C;
+    --amber: #D97E1F;
+    --green: #1A9A6A;
+    --green-soft: rgba(26,154,106,0.12);
+    --red: #D1445A;
+    --red-soft: rgba(209,68,90,0.12);
+    --line: rgba(108,79,209,0.35);
+    --star: rgba(60,60,100,0.35);
+    --glass-blur: blur(10px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #05070F;
+      --bg-deep: #0A0E1C;
+      --card: rgba(19,24,44,0.68);
+      --card-border: rgba(140,160,255,0.20);
+      --ink: #E8ECFC;
+      --ink-soft: #93A0C7;
+      --violet: #9B82F5;
+      --violet-deep: #C9BBFF;
+      --cyan: #45E0D6;
+      --amber: #FFB24D;
+      --green: #43E0A0;
+      --green-soft: rgba(67,224,160,0.14);
+      --red: #FF7086;
+      --red-soft: rgba(255,112,134,0.14);
+      --line: rgba(140,160,255,0.35);
+      --star: rgba(255,255,255,0.85);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #05070F;
+    --bg-deep: #0A0E1C;
+    --card: rgba(19,24,44,0.68);
+    --card-border: rgba(140,160,255,0.20);
+    --ink: #E8ECFC;
+    --ink-soft: #93A0C7;
+    --violet: #9B82F5;
+    --violet-deep: #C9BBFF;
+    --cyan: #45E0D6;
+    --amber: #FFB24D;
+    --green: #43E0A0;
+    --green-soft: rgba(67,224,160,0.14);
+    --red: #FF7086;
+    --red-soft: rgba(255,112,134,0.14);
+    --line: rgba(140,160,255,0.35);
+    --star: rgba(255,255,255,0.85);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(1.6px 1.6px at 8% 18%, var(--star) 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 76% 8%, var(--star) 55%, transparent 56%),
+      radial-gradient(1.6px 1.6px at 55% 65%, var(--star) 45%, transparent 46%),
+      radial-gradient(1.2px 1.2px at 28% 82%, var(--star) 50%, transparent 51%),
+      radial-gradient(1.6px 1.6px at 88% 55%, var(--star) 45%, transparent 46%),
+      radial-gradient(1.2px 1.2px at 40% 35%, var(--star) 45%, transparent 46%),
+      radial-gradient(circle at 12% 10%, color-mix(in srgb, var(--violet) 22%, transparent), transparent 42%),
+      radial-gradient(circle at 90% 88%, color-mix(in srgb, var(--cyan) 16%, transparent), transparent 42%);
+    background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat;
+    background-size: 220px 220px, 260px 260px, 300px 300px, 240px 240px, 280px 280px, 200px 200px, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+    animation: drift 90s linear infinite;
+    color:var(--ink);
+    font-family:"IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:22px 14px 60px;
+  }
+  @keyframes drift{
+    0%{ background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+    100%{ background-position: 220px 220px, -260px 130px, 150px -300px, -240px 240px, 280px 140px, -100px 200px, 0 0, 0 0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    body{ animation:none; }
+  }
+
+  .app{
+    width:100%;
+    max-width:430px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  header.top{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    padding:2px 2px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  .kicker{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--cyan);
+    font-weight:600;
+  }
+  h1{
+    font-family:"Space Grotesk", sans-serif;
+    font-weight:600;
+    font-size:23px;
+    line-height:1.28;
+    margin:0;
+    color:var(--violet-deep);
+  }
+  .sub{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.55;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:16px;
+    backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);
+  }
+
+  .problem p{
+    margin:0;
+    font-size:14.5px;
+    line-height:1.7;
+    color:var(--ink);
+  }
+  .problem .q{
+    margin-top:10px;
+    font-weight:600;
+    color:var(--violet-deep);
+  }
+
+  .values{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+  .chip{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:13px;
+    font-weight:600;
+    background:color-mix(in srgb, var(--violet) 12%, transparent);
+    color:var(--ink);
+    border:1px solid var(--card-border);
+    border-radius:7px;
+    padding:5px 9px;
+  }
+  .chip b{ color:var(--amber); font-weight:700; }
+
+  .diagram-wrap{
+    padding:8px 8px 4px;
+    box-shadow: 0 0 40px -10px color-mix(in srgb, var(--violet) 45%, transparent);
+  }
+  .diagram-wrap svg{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+  .diagram-caption{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .opt-title{
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:2px;
+  }
+  .opt-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  button.opt{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:15px;
+    font-weight:600;
+    padding:11px 8px;
+    border-radius:9px;
+    border:1.5px solid var(--card-border);
+    background:color-mix(in srgb, var(--card) 90%, transparent);
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .12s ease, background .12s ease, transform .06s ease, box-shadow .12s ease;
+  }
+  button.opt .mark{
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-right:6px;
+  }
+  button.opt:hover{ border-color:var(--violet); }
+  button.opt:active{ transform:scale(0.98); }
+  button.opt.selected{
+    border-color:var(--amber);
+    background:color-mix(in srgb, var(--amber) 16%, transparent);
+    box-shadow:0 0 14px -3px color-mix(in srgb, var(--amber) 60%, transparent);
+  }
+  button.opt.selected .mark{ color:var(--amber); }
+  button.opt:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+
+  button.opt.show-correct{
+    border-color:var(--green);
+    background:var(--green-soft);
+    box-shadow:0 0 14px -3px color-mix(in srgb, var(--green) 55%, transparent);
+  }
+  button.opt.show-wrong{
+    border-color:var(--red);
+    background:var(--red-soft);
+  }
+
+  .actions{
+    display:flex;
+    gap:10px;
+  }
+  .btn{
+    flex:1;
+    font-family:"IBM Plex Sans KR", sans-serif;
+    font-size:15px;
+    font-weight:600;
+    padding:13px 10px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    transition:filter .12s ease, transform .06s ease;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--violet), var(--cyan));
+    color:#0A0E1C;
+    font-weight:700;
+  }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-ghost{
+    background:transparent;
+    color:var(--violet-deep);
+    border:1.5px solid var(--violet);
+  }
+  .btn-ghost:hover{ background:color-mix(in srgb, var(--violet) 12%, transparent); }
+  .btn:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+
+  .hint{
+    min-height:18px;
+    font-size:13px;
+    color:var(--red);
+    font-weight:600;
+    padding-left:2px;
+  }
+
+  .result{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    border-left:4px solid var(--line);
+  }
+  .result.correct{ border-left-color:var(--green); }
+  .result.wrong{ border-left-color:var(--red); }
+
+  .verdict{
+    font-family:"Space Grotesk", sans-serif;
+    font-weight:600;
+    font-size:17px;
+  }
+  .result.correct .verdict{ color:var(--green); }
+  .result.wrong .verdict{ color:var(--red); }
+
+  .steps{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .step{
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--ink);
+  }
+  .step .lbl{
+    display:block;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-bottom:2px;
+  }
+  .formula{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:13.5px;
+    background:color-mix(in srgb, var(--violet) 10%, transparent);
+    border-radius:7px;
+    padding:8px 10px;
+    display:block;
+    color:var(--ink);
+    overflow-x:auto;
+  }
+  .answer-line{
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:700;
+    font-size:15px;
+    color:var(--violet-deep);
+  }
+
+  [hidden]{ display:none !important; }
+
+  footer.foot{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    padding-top:4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="top">
+    <span class="kicker">ORBITAL MECHANICS · 실험 3</span>
+    <h1>궤도 스테이션 — A의 질량 구하기</h1>
+    <p class="sub">위성 B는 궤도륜 위에서 등속 원운동을 하고, 케이블은 중앙 허브를 지나 아래로 매달린 탐사정 A와 연결되어 있습니다.</p>
+  </header>
+
+  <section class="card problem">
+    <p>그림과 같이 물체 A와 실로 연결된 물체 B가 마찰이 없는 수평면에서 반지름이 <b id="txt-r">0.4</b>m인 원궤도를 따라 <b id="txt-v">2</b>m/s의 속력으로 등속 원운동을 한다. B의 질량은 <b id="txt-mB">1</b>kg이다.</p>
+    <p class="q">A의 질량은? (단, 중력 가속도는 10m/s²이고, 물체의 크기, 실의 질량은 무시한다.)</p>
+    <div class="values">
+      <span class="chip">m<sub>B</sub> = <b id="chip-mB">1</b> kg</span>
+      <span class="chip">r = <b id="chip-r">0.4</b> m</span>
+      <span class="chip">v = <b id="chip-v">2</b> m/s</span>
+      <span class="chip">g = <b>10</b> m/s²</span>
+    </div>
+  </section>
+
+  <section class="card diagram-wrap">
+    <svg id="scene" viewBox="0 0 300 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="platformGrad" cx="45%" cy="35%" r="70%">
+          <stop offset="0%" stop-color="#3B3660"/>
+          <stop offset="55%" stop-color="#211E3D"/>
+          <stop offset="100%" stop-color="#12102A"/>
+        </radialGradient>
+        <radialGradient id="hubGrad" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#CFE8FF"/>
+          <stop offset="35%" stop-color="#9B82F5"/>
+          <stop offset="100%" stop-color="#4C36A6"/>
+        </radialGradient>
+        <radialGradient id="moonGrad" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#FFE9C7"/>
+          <stop offset="45%" stop-color="#FFB24D"/>
+          <stop offset="100%" stop-color="#C8710F"/>
+        </radialGradient>
+        <linearGradient id="beamGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#45E0D6"/>
+          <stop offset="100%" stop-color="#9B82F5"/>
+        </linearGradient>
+        <linearGradient id="podGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5F5590"/>
+          <stop offset="100%" stop-color="#2A2650"/>
+        </linearGradient>
+        <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- background stars inside the panel -->
+      <g fill="#FFFFFF">
+        <circle cx="20" cy="30" r="1" opacity="0.6"/>
+        <circle cx="270" cy="24" r="1.2" opacity="0.7"/>
+        <circle cx="40" cy="230" r="1" opacity="0.5"/>
+        <circle cx="255" cy="245" r="1.3" opacity="0.6"/>
+        <circle cx="15" cy="160" r="0.9" opacity="0.5"/>
+        <circle cx="285" cy="150" r="1" opacity="0.5"/>
+        <circle cx="60" cy="20" r="0.8" opacity="0.5"/>
+        <circle cx="230" cy="300" r="1" opacity="0.4"/>
+      </g>
+
+      <!-- orbital platform (disc) -->
+      <ellipse cx="150" cy="118" rx="112" ry="40" fill="url(#platformGrad)" stroke="var(--card-border)" stroke-width="1"/>
+
+      <!-- glowing orbit ring -->
+      <ellipse id="orbit" cx="150" cy="118" rx="95" ry="26" fill="none" stroke="url(#beamGrad)" stroke-width="1.6" stroke-dasharray="4 7" opacity="0.85" filter="url(#glow)"/>
+
+      <!-- central hub -->
+      <circle cx="150" cy="118" r="7" fill="url(#hubGrad)" filter="url(#glow)"/>
+
+      <!-- cable from B to hub -->
+      <line id="stringB" x1="150" y1="118" x2="230" y2="118" stroke="url(#beamGrad)" stroke-width="1.6" opacity="0.9"/>
+
+      <!-- radius label -->
+      <text id="rlabel" x="188" y="106" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-soft)">r</text>
+
+      <!-- B satellite -->
+      <g id="blockB">
+        <circle r="13" fill="url(#moonGrad)" stroke="#7A430A" stroke-width="1" filter="url(#glow)"/>
+        <text x="0" y="4" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" font-weight="700" fill="#3A2000">B</text>
+      </g>
+
+      <!-- velocity arrow -->
+      <g id="varrow">
+        <line x1="0" y1="0" x2="22" y2="0" stroke="#45E0D6" stroke-width="2" filter="url(#glow)"/>
+        <polygon points="22,0 15,-4 15,4" fill="#45E0D6"/>
+      </g>
+
+      <!-- vertical tether through hub down to A -->
+      <line x1="150" y1="124" x2="150" y2="252" stroke="url(#beamGrad)" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.8"/>
+
+      <!-- A probe pod -->
+      <g transform="translate(150,278)">
+        <rect x="-17" y="-18" width="34" height="34" rx="8" fill="url(#podGrad)" stroke="#1A1738" stroke-width="1.5"/>
+        <circle cx="0" cy="-4" r="7" fill="#BFE8FF" opacity="0.85"/>
+        <text x="0" y="15" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" font-weight="700" fill="#EDEBFF">A</text>
+        <ellipse cx="0" cy="20" rx="10" ry="3" fill="#45E0D6" opacity="0.35" filter="url(#glow)"/>
+      </g>
+      <text x="150" y="314" text-anchor="middle" font-family="IBM Plex Sans KR, sans-serif" font-size="11.5" fill="var(--ink-soft)">탐사정 A는 정지 상태로 매달려 있음</text>
+    </svg>
+    <p class="diagram-caption">위성 B가 궤도를 도는 동안, 케이블 장력이 탐사정 A의 무게와 균형을 이룹니다.</p>
+  </section>
+
+  <section class="card options">
+    <div class="opt-title">A의 질량은?</div>
+    <div class="opt-grid" id="optGrid"></div>
+    <div class="hint" id="hint"></div>
+  </section>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="checkBtn">확인</button>
+    <button class="btn btn-ghost" id="newBtn">새 문제</button>
+  </div>
+
+  <section class="card result" id="resultCard" hidden>
+    <div class="verdict" id="verdictText"></div>
+    <div class="steps">
+      <div class="step">
+        <span class="lbl">1. A는 정지해 있으므로 (알짜힘 = 0)</span>
+        <span class="formula" id="stepA"></span>
+      </div>
+      <div class="step">
+        <span class="lbl">2. B는 등속 원운동을 하므로, 케이블 장력이 구심력 역할을 함</span>
+        <span class="formula" id="stepB"></span>
+      </div>
+      <div class="step">
+        <span class="lbl">3. 두 식의 장력(T)이 같으므로</span>
+        <span class="formula" id="stepC"></span>
+      </div>
+      <div class="step">
+        <span class="lbl">4. m_A에 대해 정리</span>
+        <span class="answer-line" id="stepD"></span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">화면을 세로로 두고 사용하세요 · 궤도 반지름·속력·질량이 매 문제마다 달라집니다</footer>
+
+</div>
+
+<script>
+(function(){
+  const cx = 150, cy = 118, rx = 95, ry = 26;
+
+  const mBset = [0.5, 1, 1.5, 2, 2.5];
+  const rSet  = [0.2, 0.3, 0.4, 0.5, 0.6];
+  const vSet  = [1, 2, 3, 4, 5];
+  const g = 10;
+
+  let state = { mB:1, r:0.4, v:2, mA:1, options:[], selected:-1, checked:false, angle:0, omega:1 };
+
+  function round2(x){ return Math.round(x*100)/100; }
+  function fmt(x){
+    let r = round2(x);
+    return (Math.abs(r - Math.round(r)) < 0.001) ? String(Math.round(r)) : String(r);
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function genProblem(){
+    const mB = pick(mBset);
+    const r  = pick(rSet);
+    const v  = pick(vSet);
+    const mA = round2(mB * v * v / (r * g));
+
+    const cands = new Set();
+    cands.add(round2(mB * v / (r*g)));
+    cands.add(round2(mB * v*v * r / g));
+    cands.add(round2(mA * 2));
+    cands.add(round2(mA / 2));
+    cands.add(round2(mA + 1));
+    cands.add(round2(mA - 0.5 > 0 ? mA - 0.5 : mA + 1.5));
+
+    cands.delete(mA);
+    let distractors = Array.from(cands).filter(x => x > 0 && isFinite(x));
+    distractors.sort(() => Math.random() - 0.5);
+    distractors = distractors.slice(0, 4);
+    while (distractors.length < 4){
+      let extra = round2(mA + (Math.random() > 0.5 ? 1 : -1) * (0.5 + Math.random()*1.5));
+      if (extra > 0 && extra !== mA && !distractors.includes(extra)) distractors.push(extra);
+    }
+
+    let options = [mA, ...distractors].map(v => ({ value: v, correct: (v === mA) }));
+    options.sort(() => Math.random() - 0.5);
+
+    state.mB = mB; state.r = r; state.v = v; state.mA = mA;
+    state.options = options;
+    state.selected = -1;
+    state.checked = false;
+    state.omega = Math.min(3.2, Math.max(0.6, (v / r) * 0.35));
+
+    render();
+  }
+
+  function render(){
+    document.getElementById('txt-r').textContent = fmt(state.r);
+    document.getElementById('txt-v').textContent = fmt(state.v);
+    document.getElementById('txt-mB').textContent = fmt(state.mB);
+    document.getElementById('chip-mB').textContent = fmt(state.mB);
+    document.getElementById('chip-r').textContent = fmt(state.r);
+    document.getElementById('chip-v').textContent = fmt(state.v);
+
+    const grid = document.getElementById('optGrid');
+    grid.innerHTML = '';
+    const marks = ['①','②','③','④','⑤'];
+    state.options.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.setAttribute('aria-pressed', 'false');
+      b.innerHTML = '<span class="mark">' + marks[i] + '</span>' + fmt(opt.value) + ' kg';
+      b.addEventListener('click', () => selectOption(i));
+      grid.appendChild(b);
+    });
+
+    document.getElementById('hint').textContent = '';
+    document.getElementById('resultCard').hidden = true;
+    document.getElementById('resultCard').className = 'card result';
+    refreshOptionStyles();
+  }
+
+  function selectOption(i){
+    if (state.checked) return;
+    state.selected = i;
+    refreshOptionStyles();
+    document.getElementById('hint').textContent = '';
+  }
+
+  function refreshOptionStyles(){
+    const buttons = document.querySelectorAll('#optGrid .opt');
+    buttons.forEach((b, i) => {
+      b.classList.remove('selected', 'show-correct', 'show-wrong');
+      if (state.checked){
+        if (state.options[i].correct) b.classList.add('show-correct');
+        else if (i === state.selected) b.classList.add('show-wrong');
+      } else if (i === state.selected){
+        b.classList.add('selected');
+      }
+      b.setAttribute('aria-pressed', String(i === state.selected));
+    });
+  }
+
+  function checkAnswer(){
+    if (state.selected === -1){
+      document.getElementById('hint').textContent = '먼저 답을 선택하세요.';
+      return;
+    }
+    state.checked = true;
+    refreshOptionStyles();
+
+    const isCorrect = state.options[state.selected].correct;
+    const card = document.getElementById('resultCard');
+    card.hidden = false;
+    card.className = 'card result ' + (isCorrect ? 'correct' : 'wrong');
+    document.getElementById('verdictText').textContent = isCorrect ? '정답입니다!' : '오답입니다. 풀이를 확인해 보세요.';
+
+    const mB = fmt(state.mB), r = fmt(state.r), v = fmt(state.v), mA = fmt(state.mA);
+    document.getElementById('stepA').textContent = 'T = m_A · g';
+    document.getElementById('stepB').textContent = 'T = m_B · v² / r';
+    document.getElementById('stepC').textContent = 'm_A · g = m_B · v² / r';
+    document.getElementById('stepD').textContent =
+      'm_A = (m_B · v²) / (r · g) = (' + mB + ' × ' + v + '²) / (' + r + ' × 10) = ' + mA + ' kg';
+  }
+
+  document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+  document.getElementById('newBtn').addEventListener('click', genProblem);
+
+  let lastTs = null;
+  function loop(ts){
+    if (lastTs === null) lastTs = ts;
+    const dt = (ts - lastTs) / 1000;
+    lastTs = ts;
+    state.angle += state.omega * dt;
+
+    const bx = cx + rx * Math.cos(state.angle);
+    const by = cy + ry * Math.sin(state.angle);
+    const blockB = document.getElementById('blockB');
+    blockB.setAttribute('transform', 'translate(' + bx.toFixed(2) + ',' + by.toFixed(2) + ')');
+
+    const stringB = document.getElementById('stringB');
+    stringB.setAttribute('x2', bx.toFixed(2));
+    stringB.setAttribute('y2', by.toFixed(2));
+
+    const dx = -rx * Math.sin(state.angle);
+    const dy = ry * Math.cos(state.angle);
+    const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    const varrow = document.getElementById('varrow');
+    varrow.setAttribute('transform', 'translate(' + bx.toFixed(2) + ',' + by.toFixed(2) + ') rotate(' + ang.toFixed(1) + ')');
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  genProblem();
+})();
+</script>
+
+</body>
+</html>

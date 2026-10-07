@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>기억 구슬 밀기 – 힘의 합성</title>
+<style>
+:root{--bg1:#3b1f6b;--bg2:#7a3b8f;--gold:#ffd36b;--card:rgba(35,16,70,.78);--tx:#fff6e0;--ac:#ffb347;--ok:#6ee7a8;--no:#ff7a8a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:'Noto Sans KR',system-ui,sans-serif;color:var(--tx);background:linear-gradient(180deg,var(--bg1),var(--bg2) 60%,#c2577a);min-height:100%}
+#shelf{position:fixed;inset:0;z-index:0;display:flex;flex-direction:column;justify-content:space-around;padding:6px 0;opacity:.9;pointer-events:none}
+.row{display:flex;justify-content:space-around;border-bottom:5px solid rgba(255,190,120,.35)}
+.o{width:26px;height:26px;border-radius:50%;margin:4px 0;box-shadow:0 0 14px 3px var(--c);background:radial-gradient(circle at 35% 30%,#fff,var(--c) 60%);animation:tw 3s ease-in-out infinite}
+@keyframes tw{50%{opacity:.55}}
+main{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:14px 14px 40px}
+h1{font-size:20px;margin:6px 0 2px;text-align:center;text-shadow:0 0 12px var(--gold)}
+.sub{text-align:center;font-size:12px;opacity:.85;margin-bottom:10px}
+.card{background:var(--card);backdrop-filter:blur(4px);border:1px solid rgba(255,211,107,.35);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 0 22px rgba(255,190,90,.2)}
+.q{font-size:15px;line-height:1.6}
+.q b{color:var(--gold)}
+svg{width:100%;height:auto;display:block}
+.sl{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:14px}
+.sl span{width:78px}
+input[type=range]{flex:1;accent-color:var(--ac)}
+.ch{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ch button{padding:12px 0;font-size:15px;border-radius:12px;border:2px solid rgba(255,211,107,.4);background:rgba(255,255,255,.08);color:var(--tx)}
+.ch button.sel{background:var(--ac);color:#3b1f6b;border-color:#fff;font-weight:700}
+.bt{display:flex;gap:8px;margin-top:12px}
+.bt button{flex:1;padding:14px;font-size:16px;font-weight:700;border:0;border-radius:14px}
+#chk{background:var(--gold);color:#3b1f6b}
+#nw{background:#a98bff;color:#fff}
+#res{display:none;font-size:14px;line-height:1.7}
+#res h3{margin:0 0 6px;font-size:17px}
+.f{background:rgba(255,255,255,.1);padding:8px 10px;border-radius:10px;margin:6px 0;font-family:monospace;font-size:14px}
+.note{font-size:12.5px;opacity:.9}
+</style></head><body>
+<div id="shelf"></div>
+<main>
+<h1>✨ 기억 구슬 밀기 ✨</h1>
+<div class="sub">두 힘이 구슬을 밀면, 구슬은 어디로 얼마나 세게 갈까?</div>
+
+<div class="card">
+<svg id="st" viewBox="0 0 340 250">
+<defs><linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5b5b"/><stop offset=".2" stop-color="#ffa43b"/><stop offset=".4" stop-color="#ffe04a"/><stop offset=".6" stop-color="#5be38a"/><stop offset=".8" stop-color="#4aa8ff"/><stop offset="1" stop-color="#b06bff"/></linearGradient>
+<radialGradient id="hl" cx=".35" cy=".3"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/></radialGradient><radialGradient id="g"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#ffd36b"/><stop offset="1" stop-color="#ff9d3b"/></radialGradient>
+<marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#7fd0ff"/></marker>
+<marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#ff8fb1"/></marker>
+<marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#fff"/></marker></defs>
+<rect x="0" y="0" width="340" height="250" rx="12" fill="rgba(255,255,255,.06)"/>
+<g id="grid" stroke="rgba(255,255,255,.2)" stroke-dasharray="3 3"></g>
+<line x1="40" y1="215" x2="40" y2="12" stroke="#fff" stroke-width="2"/>
+<line x1="40" y1="215" x2="330" y2="215" stroke="#fff" stroke-width="2"/>
+<text x="46" y="20" fill="#fff" font-size="12">y</text><text x="322" y="208" fill="#fff" font-size="12">x</text><text x="26" y="230" fill="#fff" font-size="12">O</text>
+<g id="rs" style="display:none"><line id="dx" stroke="#fff" stroke-dasharray="4 4"/><line id="dy" stroke="#fff" stroke-dasharray="4 4"/>
+<line id="rv" stroke="#fff" stroke-width="3" marker-end="url(#a3)"/><text id="rl" fill="#fff" font-size="13" font-weight="700"></text></g>
+<line id="v1" x1="40" y1="215" stroke="#7fd0ff" stroke-width="4" marker-end="url(#a1)"/>
+<line id="v2" x1="40" y1="215" stroke="#ff8fb1" stroke-width="4" marker-end="url(#a2)"/>
+<text id="t1" fill="#7fd0ff" font-size="13" font-weight="700"></text>
+<text id="t2" fill="#ff8fb1" font-size="13" font-weight="700"></text>
+<g id="orb" style="transition:transform 1.3s cubic-bezier(.2,.8,.3,1)"><circle cx="40" cy="215" r="21" fill="url(#rb)" opacity=".3"/><circle cx="40" cy="215" r="13" fill="url(#rb)"/><circle cx="40" cy="215" r="13" fill="url(#hl)"/><circle cx="35" cy="210" r="3" fill="#fff" opacity=".8"/></g>
+</svg>
+<div class="sl"><span style="color:#7fd0ff">F₁ (↑)</span><input id="s1" type="range" min="10" max="120" step="10"><b id="n1"></b></div>
+<div class="sl"><span style="color:#ff8fb1">F₂ (→)</span><input id="s2" type="range" min="10" max="120" step="10"><b id="n2"></b></div>
+<div class="note">💡 슬라이더로 힘의 크기를 바꿔 보세요. 화살표가 길수록 센 힘!</div>
+</div>
+
+<div class="card">
+<div class="q">그림은 <i>xy</i>평면상의 힘 F₁, F₂를 나타낸 것이다. F₁, F₂의 크기는 각각 <b id="qa"></b>N, <b id="qb"></b>N이고, 서로 수직이다.<br><b>F₁ + F₂의 크기는?</b></div>
+<div class="ch" id="ch"></div>
+<div class="bt"><button id="nw">🔮 새 문제</button><button id="chk">확인</button></div>
+</div>
+
+<div class="card" id="res"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+// 배경: 기억 구슬 선반
+const cols=['#ffd36b','#ffc247','#ffe08a','#ffd36b','#ffcf5a','#ffd36b','#6fb8ff','#ff6b6b','#b98cff','#6fe3a0'];
+(function(){const s=$('shelf');for(let r=0;r<9;r++){const d=document.createElement('div');d.className='row';for(let i=0;i<9;i++){const o=document.createElement('div');o.className='o';const c=Math.random()<.9?cols[Math.floor(Math.random()*6)]:cols[6+Math.floor(Math.random()*4)];o.style.setProperty('--c',c);o.style.animationDelay=(Math.random()*3)+'s';d.appendChild(o)}s.appendChild(d)}})();
+
+const OX=40,OY=215,L=190; // 원점, 최대 화살표 길이
+let sel=null,done=false,hasSel;
+const tri=[[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15]];
+function sc(f){return f/120*L}
+function draw(){
+ const a=+$('s1').value,b=+$('s2').value,mx=Math.max(a,b,60);
+ const p=v=>v/mx*L;
+ $('n1').textContent=a+' N';$('n2').textContent=b+' N';
+ $('v1').setAttribute('x2',OX);$('v1').setAttribute('y1',OY);$('v1').setAttribute('y2',OY-p(a));
+ $('v2').setAttribute('y1',OY);$('v2').setAttribute('y2',OY);$('v2').setAttribute('x2',OX+p(b));
+ $('t1').setAttribute('x',OX+8);$('t1').setAttribute('y',OY-p(a)+4);$('t1').textContent='F₁ '+a+'N';
+ $('t2').setAttribute('x',OX+p(b)/2-18);$('t2').setAttribute('y',OY+16);$('t2').textContent='F₂ '+b+'N';
+ const g=$('grid');g.innerHTML='';const u=p(10);
+ for(let i=1;i*u<=L+20;i++){g.innerHTML+=`<line x1="${OX}" y1="${OY-i*u}" x2="325" y2="${OY-i*u}"/><line x1="${OX+i*u}" y1="${OY}" x2="${OX+i*u}" y2="14"/>`}
+ $('qa').textContent=a;$('qb').textContent=b;
+ $('orb').style.transition='none';$('orb').style.transform='translate(0,0)';
+ $('rs').style.display='none';$('res').style.display='none';done=false;sel=null;face(0);
+ const R=Math.round(Math.hypot(a,b)*10)/10;
+ let c=new Set([R,a+b,Math.abs(a-b),Math.max(a,b),Math.round(Math.hypot(a,b)+10)]);
+ let k=1;while(c.size<5){c.add(Math.round(R+10*k++))}
+ const arr=[...c].sort((x,y)=>x-y).slice(0,5);if(!arr.includes(R)){arr[Math.floor(Math.random()*5)]=R;arr.sort((x,y)=>x-y)}
+ window.ans=R;$('ch').innerHTML='';
+ arr.forEach((v,i)=>{const bt=document.createElement('button');bt.textContent=v;bt.onclick=()=>{if(done)return;sel=v;[...$('ch').children].forEach(x=>x.classList.remove('sel'));bt.classList.add('sel')};$('ch').appendChild(bt)})
+}
+function face(m){ // 0 보통 1 기쁨 2 슬픔
+ /* 표정 제거: 무지개 구슬 */
+}
+function newQ(){const t=tri[Math.floor(Math.random()*tri.length)];const k=Math.random()<.5?10:(Math.random()<.5?10:10);let [x,y]=t;if(Math.random()<.5)[x,y]=[y,x];
+ let a=x*k/ (t[2]>10?1:1),b=y*k;a=Math.min(120,a);b=Math.min(120,b);
+ // 슬라이더 범위(10단위)에 맞게 보정
+ a=Math.round(a/10)*10||10;b=Math.round(b/10)*10||10;
+ $('s1').value=a;$('s2').value=b;draw()}
+$('s1').oninput=$('s2').oninput=draw;
+$('nw').onclick=newQ;
+$('chk').onclick=()=>{
+ if(done)return;if(sel===null){alert('먼저 답을 골라 주세요!');return}
+ done=true;const a=+$('s1').value,b=+$('s2').value,R=window.ans,ok=sel===R;
+ const mx=Math.max(a,b,60),p=v=>v/mx*L,X=OX+p(b),Y=OY-p(a);
+ $('rs').style.display='block';
+ $('dx').setAttribute('x1',X);$('dx').setAttribute('x2',X);$('dx').setAttribute('y1',OY);$('dx').setAttribute('y2',Y);
+ $('dy').setAttribute('x1',OX);$('dy').setAttribute('x2',X);$('dy').setAttribute('y1',Y);$('dy').setAttribute('y2',Y);
+ $('rv').setAttribute('x1',OX);$('rv').setAttribute('y1',OY);$('rv').setAttribute('x2',X);$('rv').setAttribute('y2',Y);
+ $('rl').setAttribute('x',X/2+OX/2+8);$('rl').setAttribute('y',(OY+Y)/2-6);$('rl').textContent='합력 '+R+'N';
+ setTimeout(()=>{$('orb').style.transition='transform 1.3s cubic-bezier(.2,.8,.3,1)';$('orb').style.transform=`translate(${p(b)}px,${-p(a)}px)`},50);
+ face(ok?1:2);
+ const r=$('res');r.style.display='block';
+ const ang=Math.round(Math.atan2(a,b)*180/Math.PI);
+ r.innerHTML=`<h3 style="color:${ok?'var(--ok)':'var(--no)'}">${ok?'🌟 정답! 기쁨 구슬이 반짝여요!':'💧 아쉬워요! 슬픔 구슬이 생겼어요'}</h3>
+ 정답은 <b>${R} N</b> 입니다. (내 답: ${sel} N)
+ <div class="f">F₁ ⊥ F₂ 이므로<br>|F₁+F₂|² = F₁² + F₂²<br>= ${a}² + ${b}² = ${a*a+b*b}<br>|F₁+F₂| = √${a*a+b*b} = ${R} N</div>
+ <b>📘 핵심 개념</b><br>
+ · 힘은 크기와 방향을 모두 가진 <b>벡터</b>라서, 단순히 크기를 더하면 안 돼요 (${a}+${b}=${a+b}N ✗).<br>
+ · 두 힘이 <b>수직</b>이면 평행사변형이 직사각형이 되고, 합력은 그 <b>대각선</b>입니다. 피타고라스 정리로 크기를 구해요.<br>
+ · 합력의 방향은 x축에서 약 ${ang}° 위쪽이며, 구슬은 그 방향으로 움직여요.<br>
+ · 합력의 크기는 항상 |F₁−F₂| ≤ 합력 ≤ F₁+F₂ 범위에 있어요. 수직일 땐 그 중간 값!`;
+ r.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+newQ();
+</script>
+</body></html>

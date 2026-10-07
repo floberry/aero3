@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>등속 원운동 연습문제</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #FAF9F5;
+    --paper-panel: #FFFFFF;
+    --ink: #1A1A18;
+    --ink-soft: #74726A;
+    --rule: #1A1A18;
+    --rule-soft: #C7C4B8;
+    --red: #B4392A;
+    --red-soft: #F6E4DF;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #17181A;
+      --paper-panel: #1E1F21;
+      --ink: #EDEBE4;
+      --ink-soft: #9C998E;
+      --rule: #EDEBE4;
+      --rule-soft: #45443C;
+      --red: #E07A64;
+      --red-soft: #3A2620;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17181A;
+    --paper-panel: #1E1F21;
+    --ink: #EDEBE4;
+    --ink-soft: #9C998E;
+    --rule: #EDEBE4;
+    --rule-soft: #45443C;
+    --red: #E07A64;
+    --red-soft: #3A2620;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Noto Serif KR", serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  body { padding-bottom: 40px; }
+
+  .sheet {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 18px;
+  }
+
+  .masthead {
+    padding: 22px 0 10px;
+    border-bottom: 1.5px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .masthead .course {
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+  .masthead .points {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .qnum {
+    font-weight: 700;
+    font-size: 17px;
+    margin-right: 2px;
+  }
+
+  .stem {
+    font-size: 15.5px;
+    line-height: 1.85;
+    margin: 20px 0 18px;
+  }
+  .stem .v { font-weight: 600; border-bottom: 1px solid var(--rule-soft); padding: 0 1px; }
+
+  .diagram-box {
+    border: 1.3px solid var(--rule);
+    margin: 0 0 22px;
+    padding: 10px 8px 4px;
+    background: var(--paper-panel);
+  }
+  canvas#orbit { width: 100%; height: auto; display: block; }
+  .diagram-caption {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    padding: 4px 0 8px;
+    font-style: italic;
+  }
+  .bogi-wrap { margin: 0 0 24px; }
+  .bogi-label {
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 0.35em;
+    padding: 0 0 8px;
+  }
+  .bogi-label::before, .bogi-label::after { content: "―――"; letter-spacing: 0; color: var(--rule-soft); margin: 0 8px; }
+  .bogi-box {
+    border-top: 1.3px solid var(--rule);
+    border-bottom: 1.3px solid var(--rule);
+    padding: 14px 4px;
+  }
+  .bogi-box .row {
+    display: flex;
+    gap: 8px;
+    font-size: 15px;
+    line-height: 1.8;
+    padding: 3px 0;
+  }
+  .bogi-box .tag { flex-shrink: 0; font-weight: 600; }
+  .bogi-box .val { font-weight: 600; border-bottom: 1px solid var(--rule-soft); }
+
+  .opt-label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 6px;
+    margin: 0 0 26px;
+    justify-content: space-between;
+  }
+  .opt {
+    position: relative;
+    flex: 1 1 18%;
+    min-width: 56px;
+    text-align: center;
+    padding: 10px 2px 9px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .opt .num { display: block; font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+  .opt.selected { border-color: var(--rule); }
+  .opt .mark {
+    display: none;
+    position: absolute;
+    inset: -6px;
+    pointer-events: none;
+  }
+  .opt.correct-mark .mark { display: block; }
+  .opt.correct-mark .mark::before {
+    content: "";
+    position: absolute; inset: 0;
+    border: 2px solid var(--red);
+    border-radius: 50%;
+  }
+  .opt.wrong-mark { color: var(--red); }
+  .opt.wrong-mark::after {
+    content: "✕";
+    position: absolute;
+    top: -2px; right: 4px;
+    color: var(--red);
+    font-family: "Gaegu", cursive;
+    font-size: 15px;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin: 4px 0 6px;
+  }
+  button.primary, button.secondary {
+    flex: 1;
+    font-family: "Noto Serif KR", serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 13px 0;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  button.primary { background: var(--ink); color: var(--paper); border: 1.3px solid var(--ink); }
+  button.secondary { background: transparent; color: var(--ink); border: 1.3px solid var(--rule); }
+  button.primary:active, button.secondary:active { opacity: 0.8; }
+
+  .stamp {
+    display: none;
+    font-family: "Gaegu", cursive;
+    font-weight: 700;
+    font-size: 25px;
+    color: var(--red);
+    transform: rotate(-3deg);
+    margin: 22px 0 4px;
+    text-align: center;
+    border: 3px solid var(--red);
+    border-radius: 10px;
+    padding: 6px 0;
+  }
+  .stamp.show { display: block; }
+
+  .solution {
+    display: none;
+    margin-top: 18px;
+    border-left: 2.5px solid var(--red);
+    padding-left: 14px;
+  }
+  .solution.show { display: block; }
+  .solution .solheader {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .solution .step {
+    font-size: 14.5px;
+    line-height: 1.85;
+    padding: 8px 0;
+    border-top: 1px dotted var(--rule-soft);
+  }
+  .solution .step:first-child { border-top: none; padding-top: 0; }
+  .solution .step b { font-weight: 700; }
+  .solution .num-result { color: var(--red); font-weight: 700; }
+  .verdict {
+    font-family: "Gaegu", cursive;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--red);
+    margin-left: 4px;
+  }
+
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <span class="course">물리학Ⅱ · 등속 원운동</span>
+    <span class="points">[3점]</span>
+  </div>
+  <p class="stem"><span class="qnum">2.</span> <span id="problemText"></span></p>
+
+  <div class="diagram-box">
+    <canvas id="orbit" width="320" height="320"></canvas>
+    <div class="diagram-caption">그림. A, B의 원운동 궤도</div>
+  </div>
+
+  <div class="bogi-wrap">
+    <div class="bogi-label">보기</div>
+    <div class="bogi-box" id="bogiBox"></div>
+  </div>
+
+  <p class="opt-label">이에 대한 설명으로 옳은 것만을 &lt;보기&gt;에서 있는 대로 고른 것은?</p>
+  <div class="options" id="options"></div>
+
+  <div class="action-row">
+    <button class="secondary" id="newBtn">새 문제</button>
+    <button class="primary" id="checkBtn">확인</button>
+  </div>
+
+  <div class="stamp" id="stamp"></div>
+  <div class="solution" id="solution"></div>
+
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('orbit');
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = 320 * DPR;
+  canvas.height = 320 * DPR;
+  ctx.scale(DPR, DPR);
+
+  let state = null;
+
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b, a%b]; } return a || 1; }
+  function reduceFrac(n,d){ const g = gcd(n,d); return [n/g, d/g]; }
+  function fracLabel(n,d){
+    if (d === 1) return (n === 1 ? 'π' : n + 'π');
+    return (n === 1 ? 'π/' + d : n + 'π/' + d);
+  }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function randBool(){ return Math.random() < 0.5; }
+
+  function randInt(min, max){ return min + Math.floor(Math.random()*(max-min+1)); }
+
+  // Where A first lands, given its start at the top (0,rA) and rotation direction.
+  // key 'q1'/'q3' -> a point on the x-axis; key 'half' -> the point on the y-axis
+  // diametrically opposite the start.
+  const DEST_OPTIONS = [
+    { key:'q1',   f: 1/4, fLabel:'1/4', axis:'x' },
+    { key:'half', f: 1/2, fLabel:'1/2', axis:'y' },
+    { key:'q3',   f: 3/4, fLabel:'3/4', axis:'x' }
+  ];
+
+  function destPoint(dest, dirA, r){
+    if (dest.key === 'half') return { x: 0, y: -r };
+    if (dest.key === 'q1')  return dirA === 1 ? { x: -r, y: 0 } : { x: r, y: 0 };
+    /* q3 */                return dirA === 1 ? { x: r, y: 0 }  : { x: -r, y: 0 };
+  }
+
+  function buildProblem(){
+    const rA = randInt(1, 6);
+    const rB = randInt(rA + 2, 14);
+    const dirA = pick([1,-1]);
+    const dirB = pick([1,-1]);
+
+    const dest = pick(DEST_OPTIONS);
+    const t = dest.key === 'q3'
+      ? pick([3,6,9,12,15,18,21,24])
+      : pick([3,4,5,6,7,8,9,10,12,14,15,16,18,20,24]);
+
+    const TB = t;
+    const TA = t / dest.f;
+    const vB = reduceFrac(2*rB, t);
+    const aA = Math.pow(2*Math.PI/TA, 2) * rA;
+    const aB = Math.pow(2*Math.PI/TB, 2) * rB;
+    const cPt = destPoint(dest, dirA, rA);
+
+    let trueGi = randBool();
+    let giValue;
+    if (trueGi) { giValue = TA; }
+    else {
+      const cand = Array.from(new Set([t, 2*t, 3*t, 6*t, TA/2, TA*2]))
+        .filter(v => v !== TA && Number.isInteger(v) && v > 0);
+      giValue = pick(cand.length ? cand : [t]);
+    }
+
+    let trueNi = randBool();
+    let niFrac;
+    if (trueNi) { niFrac = vB; }
+    else {
+      const opts = [
+        reduceFrac(2*rA, t),
+        reduceFrac(rB, t),
+        reduceFrac(4*rB, t),
+        reduceFrac(2*rB, t*2)
+      ].filter(f => !(f[0] === vB[0] && f[1] === vB[1]));
+      niFrac = pick(opts.length ? opts : [reduceFrac(2*rA,t)]);
+    }
+
+    const actualDiWord = aA < aB ? '작다' : '크다';
+    const oppositeDiWord = aA < aB ? '크다' : '작다';
+    let trueDi = randBool();
+
+    let truths = { 'ㄱ': trueGi, 'ㄴ': trueNi, 'ㄷ': trueDi };
+    if (!truths['ㄱ'] && !truths['ㄴ'] && !truths['ㄷ']) {
+      const flip = pick(['ㄱ','ㄴ','ㄷ']);
+      truths[flip] = true;
+      if (flip === 'ㄱ') giValue = TA;
+      if (flip === 'ㄴ') niFrac = vB;
+      if (flip === 'ㄷ') { trueDi = true; }
+    }
+    const finalDiWord = truths['ㄷ'] ? actualDiWord : oppositeDiWord;
+
+    const correctSet = Object.keys(truths).filter(k => truths[k]);
+
+    const allSubsets = [
+      ['ㄱ'], ['ㄴ'], ['ㄷ'],
+      ['ㄱ','ㄴ'], ['ㄱ','ㄷ'], ['ㄴ','ㄷ'],
+      ['ㄱ','ㄴ','ㄷ']
+    ];
+    function sameSet(a,b){ return a.length===b.length && a.every(x=>b.includes(x)); }
+    const others = allSubsets.filter(s => !sameSet(s, correctSet));
+    for (let i = others.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [others[i], others[j]] = [others[j], others[i]];
+    }
+    const chosenOthers = others.slice(0, 4);
+    let optionSets = [correctSet, ...chosenOthers];
+    for (let i = optionSets.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [optionSets[i], optionSets[j]] = [optionSets[j], optionSets[i]];
+    }
+    const correctIndex = optionSets.findIndex(s => sameSet(s, correctSet));
+
+    return {
+      rA, rB, t, dirA, dirB, TA, TB, vB, aA, aB, dest, cPt, actualDiWord,
+      giValue, niFrac, diWord: finalDiWord,
+      truths: { 'ㄱ': truths['ㄱ'], 'ㄴ': truths['ㄴ'], 'ㄷ': truths['ㄷ'] },
+      optionSets, correctIndex,
+      selected: null, checked: false
+    };
+  }
+
+  function ink(){ return getComputedStyle(document.documentElement).getPropertyValue('--ink').trim(); }
+  function inkSoft(){ return getComputedStyle(document.documentElement).getPropertyValue('--ink-soft').trim(); }
+
+  function drawStatic(s, extra){
+    const W = 320, H = 320, cx = W/2, cy = H/2;
+    ctx.clearRect(0,0,W,H);
+    const softC = inkSoft();
+    const inkC = ink();
+
+    const margin = 34;
+    const scale = (W/2 - margin) / s.rB;
+    const rAp = scale * s.rA;
+    const rBp = scale * s.rB;
+
+    ctx.strokeStyle = softC;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin*0.4, cy); ctx.lineTo(W - margin*0.4, cy);
+    ctx.moveTo(cx, margin*0.4); ctx.lineTo(cx, H - margin*0.4);
+    ctx.stroke();
+    ctx.fillStyle = softC;
+    ctx.font = 'italic 12px "Noto Serif KR", serif';
+    ctx.fillText('y(m)', cx + 6, margin*0.4 + 10);
+    ctx.fillText('x(m)', W - margin*0.4 - 26, cy - 6);
+    ctx.font = '11px "Noto Serif KR", serif';
+    ctx.fillText('O', cx - 13, cy + 14);
+
+    ctx.setLineDash([3,4]);
+    ctx.strokeStyle = inkC;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.arc(cx, cy, rAp, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, rBp, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = inkC;
+    ctx.beginPath(); ctx.arc(cx, cy - rAp, 3.2, 0, Math.PI*2); ctx.fill();
+    ctx.font = '12px "Noto Serif KR", serif';
+    ctx.fillText('a', cx + 6, cy - rAp - 3);
+
+    ctx.beginPath(); ctx.arc(cx, cy - rBp, 3.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillText('b', cx + 6, cy - rBp - 3);
+
+    const cxp = cx + scale * s.cPt.x;
+    const cyp = cy - scale * s.cPt.y;
+    ctx.beginPath(); ctx.arc(cxp, cyp, 2.6, 0, Math.PI*2); ctx.fill();
+    const cLabelY = s.cPt.y < 0 ? cyp + 15 : cyp - 8;
+    ctx.fillText('c', cxp - 4, cLabelY);
+
+    function arrow(px, py, dx, dy, color){
+      const len = 12;
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.3;
+      const ex = px + dx*len, ey = py + dy*len;
+      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ex,ey); ctx.stroke();
+      const ang = Math.atan2(ey-py, ex-px);
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 5.5*Math.cos(ang - 0.4), ey - 5.5*Math.sin(ang - 0.4));
+      ctx.lineTo(ex - 5.5*Math.cos(ang + 0.4), ey - 5.5*Math.sin(ang + 0.4));
+      ctx.closePath(); ctx.fill();
+    }
+    arrow(cx, cy - rAp, s.dirA === 1 ? -1 : 1, 0, softC);
+    arrow(cx, cy - rBp, s.dirB === 1 ? -1 : 1, 0, softC);
+
+    ctx.fillStyle = softC;
+    ctx.font = '11px "Noto Serif KR", serif';
+    ctx.fillText(String(s.rA), cx + rAp - 3, cy + 14);
+    ctx.fillText(String(s.rB), cx + rBp - 3, cy + 14);
+
+    if (extra) extra(ctx, cx, cy, scale);
+  }
+
+  function render(){
+    const s = state;
+    drawStatic(s, (ctx, cx, cy, scale) => {
+      const inkC = ink();
+      ctx.fillStyle = inkC;
+      ctx.beginPath(); ctx.arc(cx, cy - scale*s.rA, 5, 0, Math.PI*2); ctx.fill();
+      ctx.font = '11px "Noto Serif KR", serif';
+      ctx.fillText('A', cx + 7, cy - scale*s.rA + 3);
+      ctx.beginPath(); ctx.arc(cx, cy - scale*s.rB, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillText('B', cx + 7, cy - scale*s.rB + 3);
+    });
+
+    document.getElementById('problemText').innerHTML =
+      `그림은 물체 A, B가 xy 평면상의 원점을 중심으로 반지름이 각각 <span class="v">${s.rA}m</span>, <span class="v">${s.rB}m</span>인 궤도를 따라 등속 원운동 하는 모습을 나타낸 것이다. A, B가 y축상의 점 a, b에서 동시에 출발하여, <span class="v">${s.t}초</span> 후에 A는 ${s.dest.axis}축상의 점 c에 처음으로 도달하고, B는 한 바퀴를 돌아 b에 도달한다.`;
+
+    const bogi = document.getElementById('bogiBox');
+    bogi.innerHTML = `
+      <div class="row"><span class="tag">ㄱ.</span><span>A의 주기는 <span class="val">${s.giValue}초</span>이다.</span></div>
+      <div class="row"><span class="tag">ㄴ.</span><span>B의 속력은 <span class="val">${fracLabel(s.niFrac[0], s.niFrac[1])} m/s</span>이다.</span></div>
+      <div class="row"><span class="tag">ㄷ.</span><span>구심 가속도의 크기는 A가 B보다 <span class="val">${s.diWord}</span>.</span></div>
+    `;
+
+    const optsBox = document.getElementById('options');
+    optsBox.innerHTML = '';
+    s.optionSets.forEach((set, i) => {
+      const div = document.createElement('div');
+      div.className = 'opt';
+      div.dataset.idx = i;
+      div.innerHTML = `<span class="mark"></span><span class="num">${['①','②','③','④','⑤'][i]}</span>${set.join(', ')}`;
+      div.addEventListener('click', () => {
+        if (s.checked) return;
+        s.selected = i;
+        Array.from(optsBox.children).forEach(c => c.classList.remove('selected'));
+        div.classList.add('selected');
+      });
+      optsBox.appendChild(div);
+    });
+
+    const stampEl = document.getElementById('stamp');
+    stampEl.className = 'stamp';
+    stampEl.innerHTML = '';
+    document.getElementById('solution').className = 'solution';
+    document.getElementById('solution').innerHTML = '';
+  }
+
+  function checkAnswer(){
+    const s = state;
+    const stampEl = document.getElementById('stamp');
+    if (s.selected === null) {
+      stampEl.className = 'stamp show';
+      stampEl.textContent = '먼저 답을 골라주세요';
+      return;
+    }
+    s.checked = true;
+    const optsBox = document.getElementById('options');
+    Array.from(optsBox.children).forEach((c, i) => {
+      if (i === s.correctIndex) c.classList.add('correct-mark');
+      else if (i === s.selected) c.classList.add('wrong-mark');
+    });
+
+    const isCorrect = s.selected === s.correctIndex;
+    stampEl.className = 'stamp show';
+    stampEl.textContent = isCorrect ? '정답!' : `오답 — 정답 ${['①','②','③','④','⑤'][s.correctIndex]}`;
+
+    const v = w => `<span class="verdict">${w ? '(참)' : '(거짓)'}</span>`;
+    const sol = document.getElementById('solution');
+    sol.className = 'solution show';
+    sol.innerHTML = `
+      <div class="solheader">채점 노트 · 풀이</div>
+      <div class="step"><b>B의 주기</b> — B가 ${s.t}초 만에 한 바퀴 돌아 b로 되돌아오므로 T<sub>B</sub> = <span class="num-result">${s.t}초</span>.</div>
+      <div class="step"><b>A의 주기</b> — A는 y축의 점 a에서 출발해 ${s.dest.axis}축에 처음 도달한다. 점 c까지 이동한 거리는 원궤도의 <span class="num-result">${s.dest.fLabel}바퀴</span>이므로 ${s.t}초 = T<sub>A</sub> × ${s.dest.fLabel}, 따라서 T<sub>A</sub> = ${s.t} ÷ ${s.dest.fLabel} = <span class="num-result">${s.TA}초</span>.</div>
+      <div class="step">ㄱ. 보기 값 ${s.giValue}초는 실제 주기 ${s.TA}초와 ${s.truths['ㄱ'] ? '같음' : '다름'}. ${v(s.truths['ㄱ'])}</div>
+      <div class="step"><b>B의 속력</b> — v<sub>B</sub> = 2πr<sub>B</sub>/T<sub>B</sub> = 2π×${s.rB}/${s.t} = <span class="num-result">${fracLabel(s.vB[0], s.vB[1])} m/s</span>.</div>
+      <div class="step">ㄴ. 보기 값 ${fracLabel(s.niFrac[0], s.niFrac[1])} m/s는 실제 속력과 ${s.truths['ㄴ'] ? '같음' : '다름'}. ${v(s.truths['ㄴ'])}</div>
+      <div class="step"><b>구심 가속도 비교</b> — a = (2π/T)²r.<br>a<sub>A</sub> ≈ ${s.aA.toFixed(4)} m/s², a<sub>B</sub> ≈ ${s.aB.toFixed(4)} m/s² → A가 B보다 <span class="num-result">${s.actualDiWord}</span>.</div>
+      <div class="step">ㄷ. "A가 B보다 ${s.diWord}"라는 서술은 ${s.truths['ㄷ'] ? '맞음' : '틀림'}. ${v(s.truths['ㄷ'])}</div>
+      <div class="step"><b>결론</b> — 옳은 보기: ${s.correctIndex >= 0 ? s.optionSets[s.correctIndex].join(', ') : '없음'} → 정답 <span class="num-result">${['①','②','③','④','⑤'][s.correctIndex]}</span></div>
+    `;
+  }
+
+  document.getElementById('newBtn').addEventListener('click', () => {
+    state = buildProblem();
+    render();
+  });
+  document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+
+  state = buildProblem();
+  render();
+})();
+</script>
+</body>
+</html>

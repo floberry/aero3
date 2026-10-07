@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>탁자 위 바퀴벌레와 거미 — 등속원운동 연습 (측면도 v3)</title>
+<style>
+:root{--bg:#F6F4EC;--panel:#FFFFFF;--ink:#1E2530;--soft:#5B6472;--line:#33587D;--lsoft:#B9C7D6;--grid:rgba(51,88,125,.10);--accent:#C98A2B;--aink:#3A2606;--good:#2F6F52;--goodbg:#E7F2EA;--bad:#A63D3D;--badbg:#F7E9E7;--border:#D8D2C2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181F;--panel:#1B2029;--ink:#ECE9E0;--soft:#A6ADB8;--line:#7FA8D6;--lsoft:#3A4658;--grid:rgba(127,168,214,.10);--accent:#E3A94A;--good:#6FC79A;--goodbg:#17281F;--bad:#E08A8A;--badbg:#2C1A1A;--border:#2C3340}}
+:root[data-theme="dark"]{--bg:#14181F;--panel:#1B2029;--ink:#ECE9E0;--soft:#A6ADB8;--line:#7FA8D6;--lsoft:#3A4658;--grid:rgba(127,168,214,.10);--accent:#E3A94A;--good:#6FC79A;--goodbg:#17281F;--bad:#E08A8A;--badbg:#2C1A1A;--border:#2C3340}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;display:flex;justify-content:center;padding:18px 14px 44px}
+.sheet{width:100%;max-width:440px}
+.kicker{font-size:12.5px;color:var(--soft);margin:0 0 4px}
+h1{font-family:Georgia,'Noto Serif KR',serif;font-size:25px;line-height:1.25;margin:0 0 6px}
+.sub{font-size:14px;color:var(--soft);line-height:1.55;margin:0 0 16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:13px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.prob{border-left:4px solid var(--line);border-radius:4px 14px 14px 4px}
+.lbl{font-size:12px;font-weight:700;color:var(--line);margin-bottom:7px}
+.txt{font-size:15.5px;line-height:1.8}
+.val{font-weight:700;background:color-mix(in srgb,var(--accent) 22%,transparent);padding:1px 5px;border-radius:5px;white-space:nowrap}
+.dt{font-size:12.5px;font-weight:600;color:var(--soft);margin:0 0 6px 2px}
+canvas{display:block;width:100%;border-radius:8px;background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/22px 22px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/22px 22px,var(--panel)}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:12px 14px;border-radius:11px;border:1.5px solid var(--border);background:var(--panel);color:var(--ink);font:inherit;font-size:15.5px;cursor:pointer}
+.bul{flex:none;width:25px;height:25px;border-radius:50%;border:1.5px solid var(--lsoft);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--soft)}
+.opt.sel{border-color:var(--line)}.opt.sel .bul{background:var(--line);border-color:var(--line);color:var(--panel)}
+.opt.ok{border-color:var(--good);background:var(--goodbg)}.opt.ok .bul{background:var(--good);border-color:var(--good);color:#fff}
+.opt.no{border-color:var(--bad);background:var(--badbg)}.opt.no .bul{background:var(--bad);border-color:var(--bad);color:#fff}
+.row{display:flex;gap:10px;margin-top:15px}
+.act{flex:1;padding:14px 8px;border-radius:11px;font:inherit;font-size:15px;font-weight:700;border:1.5px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer}
+.act.pri{background:var(--accent);border-color:var(--accent);color:var(--aink)}
+.act:disabled{opacity:.45}
+.fb{display:none;margin-top:14px;border-radius:12px;padding:14px;border:1.5px solid var(--border)}
+.fb.show{display:block}.fb.good{border-color:var(--good);background:var(--goodbg)}.fb.bad{border-color:var(--bad);background:var(--badbg)}
+.fbh{font-weight:800;font-size:15.5px;margin-bottom:8px}.fb.good .fbh{color:var(--good)}.fb.bad .fbh{color:var(--bad)}
+.steps{font-size:14.5px;line-height:1.85}.eq{display:block;margin:3px 0;font-size:15.5px}.note{color:var(--soft);font-size:13.5px}
+.score{display:flex;justify-content:space-between;font-size:13px;color:var(--soft);margin-top:12px}
+footer{text-align:center;font-size:12px;color:var(--soft);margin-top:18px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <p class="kicker">역학적 상호 작용 · 등속원운동</p>
+  <h1>탁자 위를 도는 바퀴벌레,<br>구멍 아래의 거미</h1>
+  <p class="sub">탁자 가운데 뚫린 구멍으로 실이 지나간다. 위에서는 바퀴벌레가 돌고, 아래에서는 거미가 실 끝에 매달려 있다.</p>
+
+  <div class="card prob"><div class="lbl">문제</div><div class="txt" id="ptxt"></div></div>
+
+  <div class="card">
+    <p class="dt">옆에서 본 모습 — 탁자 위의 바퀴벌레 B와 구멍 아래의 거미 A</p>
+    <canvas id="cS"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="lbl" style="color:var(--soft)">거미(물체 A)의 질량은?</div>
+    <div class="opts" id="opts"></div>
+    <div class="row"><button class="act" id="nb">새 문제</button><button class="act pri" id="cb">확인</button></div>
+    <div class="fb" id="fb"><div class="fbh" id="fbh"></div><div class="steps" id="fbs"></div></div>
+    <div class="score"><span>이 세션의 기록</span><span><b id="sc">0</b> / <span id="st">0</span> 정답</span></div>
+  </div>
+  <footer>[확인]을 누르면 고른 질량으로 실험이 실행돼요.<br>마찰이 없으므로 각운동량이 보존되는 운동으로 계산해요.<br>오답이면 반지름이 변하다 처음 방향이 바뀌는 지점까지 보여주고 멈춰요(이후는 같은 왕복이 반복).<br>비스듬히 본 그림이라 실제 거리 r이 일정해도 앞·뒤에서는 짧게, 옆에서는 길게 보여요.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var G=10,RM=1.2,RN=0.1,TS=0.5;
+var rV=[0.25,0.4,0.5,0.8,1.0],vV=[1,2,3,4,5],mV=[0.5,1,1.5,2,2.5],combos=[];
+function r2(x){return Math.round(x*100)/100;}
+function f(x){return String(r2(x));}
+function $(i){return document.getElementById(i);}
+function shuf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+rV.forEach(function(r){vV.forEach(function(v){mV.forEach(function(mB){var mA=r2(mB*v*v/(r*G));if(mA>=0.5&&mA<=20&&Math.abs(mA*2-Math.round(mA*2))<1e-6)combos.push({r:r,v:v,mB:mB,mA:mA});});});});
+
+var S={p:null,opts:[],ci:-1,sel:-1,done:false,c:0,t:0,r:0,rd:0,ang:0,msel:0,run:false,ok:false,res:''};
+var L=['①','②','③','④','⑤'];
+var NOTE={v:'v²이 아니라 v로 계산했어요. 구심력은 속력의 제곱에 비례해요(v가 2배 → 힘 4배).',rm:'r로 나누지 않고 곱했어요. 같은 속력이면 반지름이 작을수록 구심력이 커요(F = mv²/r).',dbl:'계산이 2배가 됐어요. T = m_B v²/r 값을 g로 나눈 값이 m_A예요.',half:'계산이 절반이 됐어요. 숫자를 다시 확인해 보세요.',nor:'r을 빼먹었어요. 구심력은 mv²/r이에요.',x:'T = m_B v²/r, T = m_A g를 다시 연결해 보세요.'};
+
+function newProblem(){
+  var p=combos[Math.floor(Math.random()*combos.length)];S.p=p;
+  var c=[{v:r2(p.mB*p.v/(p.r*G)),tag:'v'},{v:r2(p.mB*p.v*p.v*p.r/G),tag:'rm'},{v:r2(p.mA*2),tag:'dbl'},{v:r2(p.mA/2),tag:'half'},{v:r2(p.mB*p.v*p.v/G),tag:'nor'}];
+  var seen=[p.mA],o=[{v:p.mA,tag:'ok'}];
+  shuf(c).forEach(function(x){if(o.length<5&&x.v>0&&seen.indexOf(x.v)<0){seen.push(x.v);o.push(x);}});
+  var k=1;while(o.length<5){var v=r2(p.mA+k*0.5);if(seen.indexOf(v)<0){seen.push(v);o.push({v:v,tag:'x'});}k++;}
+  S.opts=shuf(o);S.ci=S.opts.findIndex(function(x){return x.tag==='ok';});
+  S.sel=-1;S.done=false;S.r=p.r;S.rd=0;S.ang=0;S.msel=0;S.run=false;S.ok=false;S.res='';S.dir=0;S.r0=p.r;
+  $('ptxt').innerHTML='그림과 같이 거미(물체 A)와 실로 연결된 바퀴벌레(물체 B)가 마찰이 없는 탁자 위에서 반지름이 <span class="val">'+f(p.r)+' m</span>인 원궤도를 따라 <span class="val">'+f(p.v)+' m/s</span>의 속력으로 등속 원운동한다. B의 질량은 <span class="val">'+f(p.mB)+' kg</span>이다. A의 질량은? (단, 중력 가속도는 <span class="val">10 m/s²</span>이고, 물체의 크기, 실의 질량은 무시한다.)';
+  var w=$('opts');w.innerHTML='';
+  S.opts.forEach(function(x,i){var b=document.createElement('button');b.type='button';b.className='opt';b.innerHTML='<span class="bul">'+L[i]+'</span><span>'+f(x.v)+' kg</span>';
+    b.onclick=function(){if(S.done)return;S.sel=i;Array.prototype.forEach.call(w.children,function(c,j){c.classList.toggle('sel',j===i);});};w.appendChild(b);});
+  $('fb').className='fb';$('cb').disabled=false;
+}
+
+function check(){
+  if(S.sel<0||S.done)return;
+  S.done=true;var p=S.p,sv=S.opts[S.sel],ok=S.sel===S.ci;
+  S.t++;if(ok)S.c++;$('sc').textContent=S.c;$('st').textContent=S.t;
+  Array.prototype.forEach.call($('opts').children,function(c,i){c.disabled=true;if(i===S.ci)c.className='opt ok';else if(i===S.sel)c.className='opt no';});
+  S.msel=sv.v;S.ok=ok;S.run=true;S.rd=0;S.dir=0;
+  var T=r2(p.mB*p.v*p.v/p.r),fb=$('fb');fb.className='fb show '+(ok?'good':'bad');
+  $('fbh').textContent=ok?'정답입니다! 바퀴벌레가 안정된 원을 그려요':(sv.v>p.mA?'거미가 너무 무거워 바퀴벌레가 안쪽으로 끌려와요 (등속원운동 불가)':'거미가 너무 가벼워 바퀴벌레가 바깥쪽으로 밀려나요 (등속원운동 불가)');
+  $('fbs').innerHTML='<span class="eq">① 바퀴벌레의 구심력은 실의 장력: T = m<sub>B</sub>v²/r = '+f(p.mB)+'×'+f(p.v)+'²/'+f(p.r)+' = '+f(T)+' N</span>'+
+    '<span class="eq">② 거미는 정지 상태: T = m<sub>A</sub>g</span>'+
+    '<span class="eq">③ m<sub>A</sub> = T/g = '+f(T)+'/'+G+' = <b>'+f(p.mA)+' kg</b></span>'+(ok?'':'<span class="note">'+NOTE[sv.tag]+'</span><span class="note">고른 질량이면 구심력 m<sub>B</sub>v²/r과 장력 m<sub>A</sub>g가 달라 반지름이 변해요. 마찰이 없으면 각운동량이 보존되어 속력도 함께 변하므로 등속원운동이 유지되지 않아요.</span>');
+  $('cb').disabled=true;
+}
+$('nb').onclick=newProblem;$('cb').onclick=check;
+
+var cS=$('cS'),xS=cS.getContext('2d'),W0=330,HS=330;
+function fit(c,h){var d=window.devicePixelRatio||1;c.style.height=h+'px';W0=c.clientWidth||330;c.width=Math.round(W0*d);c.height=Math.round(h*d);c.getContext('2d').setTransform(d,0,0,d,0,0);}
+function resize(){fit(cS,HS);}
+function cs(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function arrow(x,a,b,c,d,col){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=2.2;x.beginPath();x.moveTo(a,b);x.lineTo(c,d);x.stroke();var g=Math.atan2(d-b,c-a);x.beginPath();x.moveTo(c,d);x.lineTo(c-7*Math.cos(g-.4),d-7*Math.sin(g-.4));x.lineTo(c-7*Math.cos(g+.4),d-7*Math.sin(g+.4));x.fill();}
+function fl(F){return Math.min(70,9*Math.sqrt(F));}
+var SC=function(){return (W0/2-26)/RM;};
+
+function step(dt){
+  var p=S.p;dt*=TS;
+  if(!S.run||S.ok){S.ang+=p.v/p.r*dt;return;}
+  if(S.res)return;
+  var n=8,h=dt/n;
+  for(var i=0;i<n;i++){
+    var w=p.v*p.r/(S.r*S.r);
+    S.rd+=((p.mB*S.r*w*w-S.msel*G)/(p.mB+S.msel))*h;S.r+=S.rd*h;S.ang+=w*h;
+    var sg=S.rd>1e-4?1:(S.rd<-1e-4?-1:0);if(sg!==0){if(S.dir&&sg!==S.dir){S.res='turn';break;}S.dir=sg;}
+    if(S.r<=RN){S.r=RN;S.res='drain';break;}
+    if(S.r>=RM){S.r=RM;S.res='esc';break;}
+  }
+}
+
+function drawSide(){
+  var p=S.p,x=xS,w=W0,h=HS,s=SC(),cx=w/2,cy=100,k=.42,rx=RM*s,ry=rx*k,ink=cs('--line'),sf=cs('--soft'),acc=cs('--accent'),bad=cs('--bad'),pn=cs('--panel'),wd='156,107,60';
+  x.clearRect(0,0,w,h);
+  // 탁자 다리 (뒤쪽은 짧고 흐리게)
+  x.lineCap='round';x.lineWidth=6;
+  x.strokeStyle='rgba('+wd+',.45)';x.beginPath();x.moveTo(cx-rx*.72,cy-ry*.6+8);x.lineTo(cx-rx*.72,h-6-ry*1.2);x.moveTo(cx+rx*.72,cy-ry*.6+8);x.lineTo(cx+rx*.72,h-6-ry*1.2);x.stroke();
+  x.strokeStyle='rgba('+wd+',.9)';x.beginPath();x.moveTo(cx-rx*.72,cy+ry*.6+8);x.lineTo(cx-rx*.72,h-6);x.moveTo(cx+rx*.72,cy+ry*.6+8);x.lineTo(cx+rx*.72,h-6);x.stroke();
+  // 탁자 두께와 윗면
+  x.fillStyle=pn;x.beginPath();x.ellipse(cx,cy+10,rx,ry,0,0,6.2832);x.fill();x.fillRect(cx-rx,cy,2*rx,10);
+  x.fillStyle='rgba('+wd+',.5)';x.beginPath();x.ellipse(cx,cy+10,rx,ry,0,0,6.2832);x.fill();x.fillRect(cx-rx,cy,2*rx,10);
+  x.fillStyle=pn;x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,6.2832);x.fill();
+  x.fillStyle='rgba('+wd+',.22)';x.fill();x.strokeStyle='rgba('+wd+',.9)';x.lineWidth=2.5;x.stroke();
+  // 궤도(점선 타원)
+  var r=S.r,rr=r*s,a=S.ang,px=cx+rr*Math.cos(a),py=cy+rr*k*Math.sin(a);
+  x.save();x.setLineDash([4,5]);x.strokeStyle=sf;x.lineWidth=1.3;x.beginPath();x.ellipse(cx,cy,rr,rr*k,0,0,6.2832);x.stroke();x.restore();
+  // 구멍, 실
+  x.fillStyle=cs('--ink');x.beginPath();x.ellipse(cx,cy,7,2.6,0,0,6.2832);x.fill();
+  var m=S.run?S.msel:0,fs=m?18+8*Math.sqrt(m):28,ay=cy+34+s*(RM-r);
+  x.strokeStyle=ink;x.lineWidth=1.5;x.beginPath();x.moveTo(px,py);x.lineTo(cx,cy);x.lineTo(cx,ay);x.stroke();
+  // 속도·구심력 화살표 (타원 투영)
+  var vi=p.v*p.r/r,w2=vi/r,Fc=p.mB*vi*vi/r,vl=Math.min(54,9*vi),tx=-Math.sin(a),ty=k*Math.cos(a);var tn=Math.hypot(tx,ty);tx/=tn;ty/=tn;
+  arrow(x,px,py,px+vl*tx,py+vl*ty,acc);
+  var fx=-Math.cos(a),fy=-k*Math.sin(a),fn=Math.hypot(fx,fy),fc=Math.min(Math.max(rr*fn-8,0),fl(Fc));if(fc>6)arrow(x,px,py,px+fc*fx/fn,py+fc*fy/fn,bad);
+  // 바퀴벌레
+  var dz=Math.sin(a);x.fillStyle='rgba(0,0,0,.22)';x.beginPath();x.ellipse(px,py+1,8+2*dz,3+dz,0,0,6.2832);x.fill();x.fillStyle=ink;x.font=(18+5*dz)+'px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🪳',px,py-9);
+  x.textBaseline='alphabetic';x.font='700 11px sans-serif';
+  x.fillStyle=ink;x.fillText('B '+f(p.mB)+' kg',px,py-26);
+  x.fillStyle=acc;x.textAlign='left';x.fillText('v = '+vi.toFixed(1)+' m/s',Math.min(px+vl*tx+4,w-76),py+vl*ty+(ty>0?12:-4));
+  x.fillStyle=sf;x.textAlign='center';x.fillText('r = '+r.toFixed(2)+' m',(px+cx)/2,(py+cy)/2+16);
+  // 거미
+  x.font=fs+'px serif';x.textBaseline='middle';x.fillText('🕷️',cx,ay+fs/2);x.textBaseline='alphabetic';
+  x.fillStyle=ink;x.font='700 12px sans-serif';x.textAlign='left';x.fillText(m?'A '+f(m)+' kg':'A = ?',cx+fs/2+6,ay+fs/2+4);
+  if(m){var ax=cx-fs/2-14,L2=Math.min(fl(m*G),h-6-(ay+4));arrow(x,ax,ay+4,ax,ay+4+L2,sf);x.fillStyle=sf;x.font='700 11px sans-serif';x.textAlign='right';x.fillText('m_A g',ax-6,ay+4+L2/2+4);}
+  x.fillStyle=sf;x.font='700 11px sans-serif';x.textAlign='left';x.fillText('→ v',8,16);x.fillStyle=bad;x.fillText('→ 구심력 F = mv²/r',8,30);
+  var ml=S.res==='drain'?['구멍으로 끌려갔다! 🕷️']:S.res==='esc'?['탁자 밖으로 도망! 🪳💨']:S.res==='turn'?['반지름 '+p.r.toFixed(2)+' → '+S.r.toFixed(2)+' m로 변했어요','등속원운동이 아니에요']:(S.run&&S.ok?['안정된 원운동 ✓']:[]);
+  ml.forEach(function(t,i){x.fillStyle=cs('--ink');x.font='700 12.5px sans-serif';x.textAlign='right';x.fillText(t,w-8,16+i*15);});
+}
+
+var last=null;
+function tick(t){if(last===null)last=t;var dt=Math.min(.05,(t-last)/1000);last=t;if(S.p){step(dt);drawSide();}requestAnimationFrame(tick);}
+window.addEventListener('resize',resize);
+resize();newProblem();requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

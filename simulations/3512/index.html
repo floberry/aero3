@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>힘의 합력 연습</title>
+<style>
+  :root{
+    --bg: #fbf1f3;
+    --card: #fffbfc;
+    --ink: #4a3a3e;
+    --sub: #a68b92;
+    --accent: #d98fa4;
+    --accent-dark: #a85f76;
+    --accent-soft: #f7e1e7;
+    --good: #8faa8a;
+    --good-soft: #ecf2ea;
+    --bad: #b23a55;
+    --bad-soft: #f7e0e4;
+    --grid-line: #f0dde2;
+    --axis: #7d6169;
+    --f1: #d6336c;
+    --f2: #2f9e8f;
+    --border: #f0dde2;
+    --selected-bg: #f7e1e7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #241a1e;
+      --card: #2e2226;
+      --ink: #f3e6ea;
+      --sub: #c2a3ac;
+      --accent: #e8a8ba;
+      --accent-dark: #f5c3d0;
+      --accent-soft: #3d2b30;
+      --good: #a3c29d;
+      --good-soft: #2b3628;
+      --bad: #e0899a;
+      --bad-soft: #3a2329;
+      --grid-line: #3d2b30;
+      --axis: #e3cdd3;
+      --f1: #ff6f9c;
+      --f2: #3fcbb8;
+      --border: #3d2b30;
+      --selected-bg: #3d2b30;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #241a1e;
+    --card: #2e2226;
+    --ink: #f3e6ea;
+    --sub: #c2a3ac;
+    --accent: #e8a8ba;
+    --accent-dark: #f5c3d0;
+    --accent-soft: #3d2b30;
+    --good: #a3c29d;
+    --good-soft: #2b3628;
+    --bad: #e0899a;
+    --bad-soft: #3a2329;
+    --grid-line: #3d2b30;
+    --axis: #e3cdd3;
+    --f1: #ff6f9c;
+    --f2: #3fcbb8;
+    --border: #3d2b30;
+    --selected-bg: #3d2b30;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body{
+    display:flex;
+    justify-content:center;
+    padding: 18px 14px 40px;
+    min-height:100vh;
+  }
+  .app{
+    width:100%;
+    max-width: 460px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  header{
+    text-align:center;
+    padding: 4px 6px 2px;
+  }
+  header h1{
+    font-size: 1.28rem;
+    margin: 0 0 4px;
+    font-weight: 800;
+    letter-spacing:-0.2px;
+  }
+  header p{
+    margin:0;
+    font-size: 0.85rem;
+    color: var(--sub);
+  }
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.03);
+  }
+
+  .problem-text{
+    font-size: 0.98rem;
+    line-height:1.55;
+    margin: 0 0 6px;
+  }
+  .problem-text b{
+    color: var(--accent-dark);
+  }
+  .values-row{
+    display:flex;
+    gap:10px;
+    margin-top: 10px;
+  }
+  .value-chip{
+    flex:1;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align:center;
+    font-weight: 700;
+    font-size: 1.02rem;
+    border: 1.5px solid transparent;
+  }
+  .chip-f1{ background: color-mix(in srgb, var(--f1) 14%, var(--card)); color: var(--f1); border-color: color-mix(in srgb, var(--f1) 35%, transparent); }
+  .chip-f2{ background: color-mix(in srgb, var(--f2) 14%, var(--card)); color: var(--f2); border-color: color-mix(in srgb, var(--f2) 35%, transparent); }
+  .value-chip span{
+    display:block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-bottom: 2px;
+  }
+
+  .diagram-wrap{
+    display:flex;
+    justify-content:center;
+    padding: 6px 0 2px;
+  }
+  svg{ width:100%; height:auto; max-width: 340px; }
+
+  .answer-section{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .options-title{
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--sub);
+    margin: 0 0 2px;
+  }
+  .options-list{
+    display:flex;
+    flex-direction:column;
+    gap: 9px;
+  }
+  .option-btn{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    width:100%;
+    text-align:left;
+    background: var(--card);
+    border: 1.6px solid var(--border);
+    border-radius: 13px;
+    padding: 12px 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    cursor:pointer;
+    font-family: inherit;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+  }
+  .option-btn:active{ transform: scale(0.98); }
+  .option-btn .opt-num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    font-size: 0.85rem;
+    font-weight: 800;
+    flex-shrink:0;
+  }
+  .option-btn.selected{
+    background: var(--selected-bg);
+    border-color: var(--accent);
+  }
+  .option-btn.selected .opt-num{
+    background: var(--accent);
+    color: #fff;
+  }
+  .option-btn.correct{
+    background: var(--good-soft);
+    border-color: var(--good);
+  }
+  .option-btn.correct .opt-num{
+    background: var(--good);
+    color: #fff;
+  }
+  .option-btn.wrong{
+    background: var(--bad-soft);
+    border-color: var(--bad);
+  }
+  .option-btn.wrong .opt-num{
+    background: var(--bad);
+    color: #fff;
+  }
+  .option-btn.disabled{
+    cursor: default;
+  }
+
+  .btn-row{
+    display:flex;
+    gap: 10px;
+  }
+  button{
+    flex:1;
+    border:none;
+    border-radius: 14px;
+    padding: 13px 10px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor:pointer;
+    transition: transform 0.05s ease, opacity 0.15s ease;
+    font-family: inherit;
+  }
+  button:active{ transform: scale(0.97); }
+  .btn-primary{
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-secondary{
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+  }
+
+  .feedback{
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    display:none;
+    animation: pop 0.18s ease;
+  }
+  @keyframes pop{
+    from{ opacity:0; transform: translateY(4px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background: var(--good-soft); border: 1.5px solid color-mix(in srgb, var(--good) 45%, transparent); }
+  .feedback.wrong{ background: var(--bad-soft); border: 1.5px solid color-mix(in srgb, var(--bad) 45%, transparent); }
+  .feedback-title{
+    font-weight: 900;
+    font-size: 1.02rem;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom: 8px;
+  }
+  .feedback.correct .feedback-title{ color: var(--good); }
+  .feedback.wrong .feedback-title{ color: var(--bad); }
+  .solution{
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .solution .step{
+    margin: 3px 0;
+  }
+  .solution .formula{
+    display:block;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin: 6px 0;
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.88rem;
+    overflow-x:auto;
+  }
+
+  .score-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:0.82rem;
+    color: var(--sub);
+    padding: 0 4px;
+  }
+  .score-row b{ color: var(--ink); }
+
+  footer{
+    text-align:center;
+    font-size: 0.75rem;
+    color: var(--sub);
+    padding-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>🌸 xy평면 위의 힘의 합력</h1>
+    <p>수직인 두 힘 F₁, F₂의 합력 크기를 천천히 구해보아요</p>
+  </header>
+
+  <div class="score-row">
+    <span>맞은 개수: <b id="scoreCorrect">0</b> / <b id="scoreTotal">0</b></span>
+    <span id="streakLabel"></span>
+  </div>
+
+  <div class="card">
+    <p class="problem-text">
+      그림은 <i>xy</i>평면상의 힘 <b>F₁</b>, <b>F₂</b>를 나타낸 것이다.
+      F₁은 <i>y</i>축 방향, F₂는 <i>x</i>축 방향이다.<br>
+      F₁ + F₂ 의 크기는? (단위: N)
+    </p>
+    <div class="values-row">
+      <div class="value-chip chip-f1"><span>F₁ 크기</span><span id="f1Val">30 N</span></div>
+      <div class="value-chip chip-f2"><span>F₂ 크기</span><span id="f2Val">40 N</span></div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg id="diagram" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <div class="card answer-section">
+    <p class="options-title">|F₁+F₂| 의 크기는? (단위: N)</p>
+    <div class="options-list" id="optionsList"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" id="newBtn">🔄 새 문제</button>
+      <button class="btn-primary" id="checkBtn">✅ 확인</button>
+    </div>
+  </div>
+
+  <div class="feedback" id="feedback">
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div class="solution" id="solutionBody"></div>
+  </div>
+
+  <footer>수직인 두 힘의 합력 = 피타고라스 정리 √(F₁² + F₂²)</footer>
+</div>
+
+<script>
+(function(){
+  var current = { f1: 30, f2: 40, answer: 50, options: [], selected: null };
+  var stats = { correct: 0, total: 0, streak: 0 };
+  var circleNums = ['①','②','③','④','⑤'];
+
+  // 피타고라스 세 쌍 (배율 적용 가능한 정수 답이 나오는 세트)
+  var triples = [
+    [3,4,5],
+    [6,8,10],
+    [9,12,15],
+    [5,12,13],
+    [10,24,26],
+    [8,15,17],
+    [7,24,25],
+    [20,21,29]
+  ];
+  var scales = [10, 10, 10, 10, 5, 10, 4, 4]; // 각 triple에 대응하는 배율(값 범위 조절용)
+
+  function pickProblem(){
+    var idx = Math.floor(Math.random() * triples.length);
+    var t = triples[idx];
+    var scale = scales[idx];
+    var a = t[0] * scale;
+    var b = t[1] * scale;
+    var c = t[2] * scale;
+    // F1, F2 순서를 랜덤하게 배정
+    if (Math.random() < 0.5){
+      current.f1 = a; current.f2 = b;
+    } else {
+      current.f1 = b; current.f2 = a;
+    }
+    current.answer = c;
+  }
+
+  function generateOptions(){
+    var f1 = current.f1, f2 = current.f2, correct = current.answer;
+    var vals = [];
+    function add(v){
+      v = Math.round(v);
+      if (v > 0 && vals.indexOf(v) === -1) vals.push(v);
+    }
+    add(correct);
+    add(f1 + f2);              // 단순히 더한 값 (흔한 오답)
+    add(Math.abs(f1 - f2));    // 차를 구한 값 (흔한 오답)
+    add(correct + 10);
+    add(correct - 10);
+    var extra = 20;
+    while (vals.length < 5){
+      add(correct + extra);
+      add(correct - extra);
+      extra += 10;
+    }
+    vals = vals.slice(0, 5);
+    // 정답이 슬라이스에서 빠졌으면 강제로 포함
+    if (vals.indexOf(correct) === -1){ vals[vals.length-1] = correct; }
+    // 셔플
+    for (var i = vals.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i+1));
+      var tmp = vals[i]; vals[i] = vals[j]; vals[j] = tmp;
+    }
+    current.options = vals;
+  }
+
+  function renderOptions(){
+    var list = document.getElementById('optionsList');
+    list.innerHTML = '';
+    current.selected = null;
+    current.options.forEach(function(val, idx){
+      var btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.type = 'button';
+      btn.dataset.value = val;
+      btn.innerHTML = '<span class="opt-num">' + circleNums[idx] + '</span><span>' + val + ' N</span>';
+      btn.addEventListener('click', function(){
+        if (btn.classList.contains('disabled')) return;
+        var all = list.querySelectorAll('.option-btn');
+        all.forEach(function(b){ b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        current.selected = val;
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  function render(){
+    document.getElementById('f1Val').textContent = current.f1 + ' N';
+    document.getElementById('f2Val').textContent = current.f2 + ' N';
+    drawDiagram();
+    generateOptions();
+    renderOptions();
+  }
+
+  function drawDiagram(){
+    var svg = document.getElementById('diagram');
+    var ns = 'http://www.w3.org/2000/svg';
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+    var originX = 70, originY = 250;
+    var maxLen = 190;
+    var maxVal = Math.max(current.f1, current.f2, 30);
+    var f1Len = Math.max(40, (current.f1 / (maxVal*1.15)) * maxLen);
+    var f2Len = Math.max(40, (current.f2 / (maxVal*1.15)) * maxLen);
+
+    function line(x1,y1,x2,y2,stroke,width){
+      var el = document.createElementNS(ns,'line');
+      el.setAttribute('x1',x1); el.setAttribute('y1',y1);
+      el.setAttribute('x2',x2); el.setAttribute('y2',y2);
+      el.setAttribute('stroke',stroke);
+      el.setAttribute('stroke-width',width);
+      el.setAttribute('stroke-linecap','round');
+      svg.appendChild(el);
+      return el;
+    }
+    function text(x,y,str,fill,size,weight,anchor){
+      var el = document.createElementNS(ns,'text');
+      el.setAttribute('x',x); el.setAttribute('y',y);
+      el.setAttribute('fill',fill);
+      el.setAttribute('font-size',size||14);
+      el.setAttribute('font-weight',weight||700);
+      el.setAttribute('text-anchor',anchor||'middle');
+      el.setAttribute('font-family','-apple-system, sans-serif');
+      el.textContent = str;
+      svg.appendChild(el);
+      return el;
+    }
+
+    // background grid
+    var gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid-line').trim() || '#d7dcec';
+    for (var gx = 10; gx <= 310; gx += 30){
+      line(gx, 20, gx, 290, gridColor, 1);
+    }
+    for (var gy = 20; gy <= 290; gy += 30){
+      line(10, gy, 310, gy, gridColor, 1);
+    }
+
+    var axisColor = getComputedStyle(document.documentElement).getPropertyValue('--axis').trim() || '#2b2f3a';
+    // axes
+    line(originX, 290, originX, 20, axisColor, 2.2); // y axis
+    line(10, originY, 310, originY, axisColor, 2.2); // x axis
+    // arrow heads for axes
+    function arrowHead(x,y,dx,dy,color){
+      var p = document.createElementNS(ns,'polygon');
+      var size = 7;
+      var pts;
+      if (dx===0){ // vertical
+        pts = (x-size)+','+(y+ (dy<0? size: -size)) +' '+(x+size)+','+(y+ (dy<0? size: -size))+' '+x+','+y;
+      } else { // horizontal
+        pts = (x+ (dx<0? size: -size))+','+(y-size)+' '+(x+ (dx<0? size: -size))+','+(y+size)+' '+x+','+y;
+      }
+      p.setAttribute('points',pts);
+      p.setAttribute('fill',color);
+      svg.appendChild(p);
+    }
+    arrowHead(originX, 18, 0, -1, axisColor);
+    arrowHead(312, originY, 1, 0, axisColor);
+    text(originX-14, originY+16, 'O', axisColor, 13, 700, 'middle');
+    text(320, originY-8, 'x', axisColor, 14, 700, 'end');
+    text(originX+14, 14, 'y', axisColor, 14, 700, 'start');
+
+    var f1Color = getComputedStyle(document.documentElement).getPropertyValue('--f1').trim() || '#e8590c';
+    var f2Color = getComputedStyle(document.documentElement).getPropertyValue('--f2').trim() || '#1971c2';
+
+    // F1 vector (vertical, upward)
+    var f1EndY = originY - f1Len;
+    line(originX, originY, originX, f1EndY, f1Color, 4);
+    arrowHead(originX, f1EndY, 0, -1, f1Color);
+    text(originX-22, f1EndY + 8, 'F₁', f1Color, 17, 900, 'middle');
+
+    // F2 vector (horizontal, rightward)
+    var f2EndX = originX + f2Len;
+    line(originX, originY, f2EndX, originY, f2Color, 4);
+    arrowHead(f2EndX, originY, 1, 0, f2Color);
+    text(f2EndX, originY + 22, 'F₂', f2Color, 17, 900, 'middle');
+  }
+
+  function newProblem(){
+    pickProblem();
+    render();
+    var fb = document.getElementById('feedback');
+    fb.classList.remove('show','correct','wrong');
+  }
+
+  function checkAnswer(){
+    var fb = document.getElementById('feedback');
+    var title = document.getElementById('feedbackTitle');
+    var body = document.getElementById('solutionBody');
+    var list = document.getElementById('optionsList');
+    var buttons = list.querySelectorAll('.option-btn');
+
+    if (current.selected === null){
+      fb.classList.remove('correct'); fb.classList.add('show','wrong');
+      title.textContent = '⚠️ 보기 중 하나를 선택해주세요';
+      body.innerHTML = '① ~ ⑤ 중 답이라고 생각하는 것을 눌러 선택한 뒤 확인 버튼을 눌러주세요.';
+      return;
+    }
+
+    stats.total++;
+    var isCorrect = current.selected === current.answer;
+    if (isCorrect){ stats.correct++; stats.streak++; }
+    else { stats.streak = 0; }
+    document.getElementById('scoreCorrect').textContent = stats.correct;
+    document.getElementById('scoreTotal').textContent = stats.total;
+    document.getElementById('streakLabel').textContent = stats.streak >= 2 ? ('🔥 ' + stats.streak + '연속 정답') : '';
+
+    // 선택지 잠금 및 정답/오답 표시
+    buttons.forEach(function(b){
+      b.classList.add('disabled');
+      var v = Number(b.dataset.value);
+      if (v === current.answer) b.classList.add('correct');
+      else if (v === current.selected && !isCorrect) b.classList.add('wrong');
+    });
+
+    var f1 = current.f1, f2 = current.f2, ans = current.answer;
+    var sq1 = f1*f1, sq2 = f2*f2, sum = sq1+sq2;
+
+    fb.classList.add('show');
+    if (isCorrect){
+      fb.classList.remove('wrong'); fb.classList.add('correct');
+      title.textContent = '🎉 정답입니다!';
+    } else {
+      fb.classList.remove('correct'); fb.classList.add('wrong');
+      title.textContent = '❌ 오답입니다. 정답은 ' + ans + ' N 입니다.';
+    }
+
+    body.innerHTML =
+      '<div class="step">F₁은 <i>y</i>축 방향, F₂는 <i>x</i>축 방향으로 서로 <b>수직</b>이므로,</div>' +
+      '<div class="step">두 힘의 합력의 크기는 피타고라스 정리를 이용해 구합니다.</div>' +
+      '<span class="formula">|F₁+F₂| = √(F₁² + F₂²)</span>' +
+      '<div class="step">= √(' + f1 + '² + ' + f2 + '²)</div>' +
+      '<div class="step">= √(' + sq1 + ' + ' + sq2 + ')</div>' +
+      '<div class="step">= √' + sum + '</div>' +
+      '<span class="formula">= ' + ans + ' N</span>';
+  }
+
+  document.getElementById('newBtn').addEventListener('click', function(){ newProblem(); });
+  document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+
+  // 초기 문제 생성
+  newProblem();
+})();
+</script>
+</body>
+</html>

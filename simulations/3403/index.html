@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme-support>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>등속 원운동 무한 연습 · Aero Physics 05</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gothic+A1:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#d7ecd2; --panel:#fffaf2; --panel2:#fdecd4;
+  --ink:#4a3a28; --muted:#a4855f; --line:#7a5c3a; --line-soft:#eecda0;
+  --amber:#f5b642; --cyan:#7fa8c9; --violet:#8f93c7;
+  --ok:#7fbd97; --ok-bg:#e6f5ea; --no:#e08b83; --no-bg:#fbe9e6;
+  --btn1:#f3a79f; --btn1-ink:#4a1712; --btn2:#f6dd8a; --btn2-ink:#4a3a05;
+  --shadow:4px 4px 0 var(--line);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#152418; --panel:#332415; --panel2:#2a1d10;
+    --ink:#f3e2c8; --muted:#c7a276; --line:#150e07; --line-soft:#5c4326;
+    --amber:#e0af5c; --cyan:#7fa8c9; --violet:#9a9ddb;
+    --ok:#9bd6b0; --ok-bg:#20362a; --no:#e2a29b; --no-bg:#3a2320;
+    --btn1:#c97b72; --btn1-ink:#2a0e0a; --btn2:#c9a94a; --btn2-ink:#2a2003;
+    --shadow:4px 4px 0 #0d0904;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#152418; --panel:#332415; --panel2:#2a1d10;
+  --ink:#f3e2c8; --muted:#c7a276; --line:#150e07; --line-soft:#5c4326;
+  --amber:#e0af5c; --cyan:#7fa8c9; --violet:#9a9ddb;
+  --ok:#9bd6b0; --ok-bg:#20362a; --no:#e2a29b; --no-bg:#3a2320;
+  --btn1:#c97b72; --btn1-ink:#2a0e0a; --btn2:#c9a94a; --btn2-ink:#2a2003;
+  --shadow:4px 4px 0 #0d0904;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Gothic A1', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size:15px; line-height:1.6; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:440px; margin:0 auto; padding:14px 14px 48px}
+h1,h2,h3,.jua{font-family:'Jua', 'Gothic A1', sans-serif; font-weight:400; letter-spacing:.01em}
+
+/* ---------- header ---------- */
+header{
+  border:3px solid var(--line); background:var(--panel); box-shadow:var(--shadow);
+  padding:12px 14px; margin-bottom:14px;
+}
+h1{font-size:22px; margin:0}
+.titlebar{display:flex; align-items:center; gap:8px}
+#heroIcon{width:38px; height:auto; flex:0 0 auto}
+.sub{font-size:12.5px; color:var(--muted); margin:0}
+.scorebar{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.chip{
+  font-size:12px; padding:3px 9px; border:2px solid var(--line-soft);
+  background:var(--panel2); color:var(--ink); white-space:nowrap;
+}
+.chip b{font-family:'Jua',sans-serif; color:var(--violet)}
+.ghost{
+  margin-left:auto; font-size:12px; padding:4px 10px; cursor:pointer;
+  border:2px solid var(--line-soft); background:var(--panel2); color:var(--muted);
+  font-family:'Gothic A1',sans-serif;
+}
+.ghost:hover{color:var(--ink); border-color:var(--line)}
+
+/* ---------- panels ---------- */
+.card{
+  border:3px solid var(--line); background:var(--panel); box-shadow:var(--shadow);
+  padding:14px; margin-bottom:14px;
+}
+.tag{
+  display:inline-block; font-family:'Jua',sans-serif; font-size:13px;
+  background:var(--amber); color:#241a02; border:2px solid var(--line);
+  padding:1px 10px; margin-bottom:9px;
+}
+.stem{font-size:14.5px; margin:0 0 10px}
+.given{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.given span{
+  font-size:12.5px; border:2px dashed var(--line-soft); padding:2px 8px; background:var(--panel2);
+}
+.given b{font-family:'Jua',sans-serif; color:var(--cyan)}
+
+/* ---------- animation stage ---------- */
+#stage{
+  border:2px solid var(--line-soft); background:
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(120,140,200,.07) 7px 8px),
+    var(--panel2);
+  margin-top:4px; overflow:hidden;
+}
+#stage svg{display:block; width:100%; height:auto; max-width:100%}
+.legend{display:flex; gap:12px; font-size:11.5px; color:var(--muted); margin-top:6px; flex-wrap:wrap}
+.key{display:inline-block; width:14px; height:3px; vertical-align:middle; margin-right:4px}
+
+/* ---------- students ---------- */
+.students{display:flex; flex-direction:column; gap:10px}
+.student{display:flex; gap:10px; align-items:flex-start}
+.avatar{
+  flex:0 0 58px; width:58px; border:3px solid var(--line); background:var(--panel2);
+  padding:3px 3px 0; text-align:center; animation:bob 2.6s ease-in-out infinite;
+}
+.avatar svg{width:100%; height:auto; display:block}
+.avatar .nm{font-family:'Jua',sans-serif; font-size:12px; background:var(--line); color:#fff; display:block; margin:2px -3px 0}
+.student:nth-child(2) .avatar{animation-delay:.35s}
+.student:nth-child(3) .avatar{animation-delay:.7s}
+.student:nth-child(4) .avatar{animation-delay:1.05s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.bubble{
+  position:relative; flex:1; border:3px solid var(--line); background:var(--panel2);
+  padding:9px 11px; font-size:13.5px; min-height:44px;
+}
+.bubble::before{
+  content:""; position:absolute; left:-9px; top:16px; width:0; height:0;
+  border-top:7px solid transparent; border-bottom:7px solid transparent; border-right:9px solid var(--line);
+}
+.bubble.mark-o{background:var(--ok-bg); border-color:var(--ok)}
+.bubble.mark-x{background:var(--no-bg); border-color:var(--no)}
+.verdict{
+  font-family:'Jua',sans-serif; font-size:12px; display:inline-block; margin-bottom:3px;
+  padding:0 7px; border:2px solid currentColor;
+}
+.verdict.o{color:var(--ok)} .verdict.x{color:var(--no)}
+
+/* ---------- options ---------- */
+.ask{font-family:'Jua',sans-serif; font-size:15px; margin:4px 0 10px}
+.opts{display:flex; flex-direction:column; gap:7px}
+.opt{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left; cursor:pointer;
+  border:3px solid var(--line-soft); background:var(--panel2); color:var(--ink);
+  padding:10px 12px; font-size:15px; font-family:'Gothic A1',sans-serif;
+  transition:transform .08s ease, background .12s ease, border-color .12s ease;
+}
+.opt .num{font-family:'Jua',sans-serif; font-size:17px; color:var(--muted); width:20px}
+.opt:active{transform:translate(2px,2px)}
+.opt[aria-pressed="true"]{border-color:var(--line); background:var(--amber); color:#241a02; box-shadow:3px 3px 0 var(--line)}
+.opt[aria-pressed="true"] .num{color:#241a02}
+.opt.right{border-color:var(--ok); background:var(--ok-bg); color:var(--ink)}
+.opt.wrong{border-color:var(--no); background:var(--no-bg); color:var(--ink)}
+.opt:disabled{cursor:default}
+
+/* ---------- answer row ---------- */
+.answerrow{display:flex; gap:8px; align-items:stretch; margin-top:12px}
+.answerrow label{
+  flex:0 0 auto; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);
+  border:2px solid var(--line-soft); padding:0 8px; background:var(--panel2);
+}
+#numInput{
+  width:44px; height:32px; text-align:center; font-size:17px; font-family:'Jua',sans-serif;
+  border:2px solid var(--line-soft); background:var(--panel); color:var(--ink);
+}
+.btn{
+  flex:1; cursor:pointer; font-family:'Jua',sans-serif; font-size:16px; padding:11px 8px;
+  border:3px solid var(--line); background:var(--btn1); color:var(--btn1-ink); box-shadow:var(--shadow);
+  transition:transform .08s ease;
+}
+.btn:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--line)}
+.btn.secondary{background:var(--btn2); color:var(--btn2-ink)}
+.btn:disabled{opacity:.45; cursor:default; transform:none}
+.newrow{margin-top:8px; display:flex}
+
+/* ---------- feedback ---------- */
+#feedback{display:none}
+#feedback.show{display:block; animation:pop .25s ease-out}
+@keyframes pop{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.result{
+  font-family:'Jua',sans-serif; font-size:19px; padding:9px 12px; border:3px solid var(--line);
+  margin:0 0 12px;
+}
+.result.o{background:var(--ok-bg); color:var(--ok)}
+.result.x{background:var(--no-bg); color:var(--no)}
+.solve{border-top:2px dashed var(--line-soft); padding-top:10px; margin-top:10px}
+.solve h3{font-size:15px; margin:0 0 6px}
+.line{font-size:13.5px; margin:0 0 9px}
+.line .who{font-family:'Jua',sans-serif; color:var(--violet)}
+.formula{
+  font-family:'Jua',sans-serif; background:var(--panel2); border-left:5px solid var(--cyan);
+  padding:7px 10px; margin:8px 0; font-size:14px; overflow-x:auto; white-space:nowrap;
+}
+.note{font-size:12.5px; color:var(--muted)}
+footer{text-align:center; font-size:11.5px; color:var(--muted); margin-top:18px}
+sub,sup{font-size:.72em}
+@media (prefers-reduced-motion:reduce){
+  .avatar{animation:none}
+  #feedback.show{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="titlebar">
+    <svg id="heroIcon" viewBox="0 0 16 13" shape-rendering="crispEdges" aria-hidden="true"></svg>
+    <h1>헌터 시험 1차</h1>
+  </div>
+  <p class="sub">당신도 헌터가 될 수 있다!</p>
+  <div class="scorebar">
+    <span class="chip">푼 문제 <b id="tries">0</b></span>
+    <span class="chip">맞힌 문제 <b id="hits">0</b></span>
+    <span class="chip">연속 <b id="streak">0</b></span>
+    <button class="ghost" id="shareBtn" type="button">링크 복사</button>
+  </div>
+</header>
+
+<section class="card">
+  <span class="tag" id="qtag">문제 1</span>
+  <p class="stem" id="stem"></p>
+  <div id="stage"></div>
+  <div class="legend">
+    <span><i class="key" style="background:#e0483c"></i>구심 가속도(중심 방향)</span>
+    <span><i class="key" style="background:#2bb3d6"></i>속도(접선 방향)</span>
+  </div>
+  <div class="given" id="given"></div>
+</section>
+
+<section class="card">
+  <div class="students" id="students"></div>
+</section>
+
+<section class="card">
+  <p class="ask">제시한 내용이 옳은 학생만을 있는 대로 고른 것은?</p>
+  <div class="opts" id="opts"></div>
+  <div class="answerrow">
+    <label for="numInput">번호 입력 <input id="numInput" type="number" min="1" max="5" inputmode="numeric" placeholder="?"></label>
+    <button class="btn" id="checkBtn" type="button" disabled>정답 확인</button>
+  </div>
+  <div class="newrow"><button class="btn secondary" id="newBtn" type="button">새 문제</button></div>
+</section>
+
+<section class="card" id="feedback">
+  <p class="result" id="result"></p>
+  <div id="marks"></div>
+  <div class="solve" id="solve"></div>
+</section>
+
+<footer>v = rω = 2πr/T · a = v²/r = rω² · F = ma = mv²/r</footer>
+</div>
+
+<script>
+/* =========================================================
+   1. 픽셀 캐릭터 (오리지널 도트 학생 4명)
+   ========================================================= */
+const BODY = [
+  ".HSSSSSSSSH.",
+  ".HSSSSSSSSH.",
+  ".HSEESSEESH.",
+  ".HSEESSEESH.",
+  ".HSSSSSSSSH.",
+  ".HSSSMMSSSH.",
+  "..SSSSSSSS..",
+  "...SSSSSS...",
+  "..CCCCCCCC..",
+  ".CCCCCCCCCC.",
+  "CCCCCCCCCCCC",
+  "CC.CCCCCC.CC"
+];
+/* B 전용: 정장 + 넥타이(가운데 T) */
+const BODY_SUIT = [
+  ".HSSSSSSSSH.",
+  ".HSSSSSSSSH.",
+  ".HSEESSEESH.",
+  ".HSEESSEESH.",
+  ".HSSSSSSSSH.",
+  ".HSSSMMSSSH.",
+  "..SSSSSSSS..",
+  "...SSSSSS...",
+  "..WCCTTCCW..",
+  ".CCCCTTCCCC.",
+  "CCCCCTTCCCCC",
+  "CC.CCCCCC.CC"
+];
+const GLASSES_ROWS = [
+  ".H.G.GG.G.H.",
+  ".HGGGG.GGGH."
+];
+/* A 전용: 양쪽 어깨부터 세로로 내려오는 빨간 줄(R) */
+const BODY_STRIPE = [
+  ".HSSSSSSSSH.",
+  ".HSSSSSSSSH.",
+  ".HSEESSEESH.",
+  ".HSEESSEESH.",
+  ".HSSSSSSSSH.",
+  ".HSSSMMSSSH.",
+  "..SSSSSSSS..",
+  "...SSSSSS...",
+  "..CRCCCCRC..",
+  ".CRCCCCCCRC.",
+  "CCRCCCCCCRCC",
+  "CR.CCCCCC.RC"
+];
+const CHARS = [
+  { name:"A", hair:["....HHHH....","..HHHHHHHH..",".HHHHHHHHHH.",".HHHHHHHHHH."],
+    body:BODY_STRIPE,
+    pal:{H:"#f6c53f",S:"#f4c79e",E:"#2c4a8c",M:"#c0655f",C:"#2f5fa8",R:"#e2362a",G:"#2b3252"} },
+  { name:"B", hair:["..HHHHHHHH..",".HHHHHHHHHH."],
+    body:BODY_SUIT,
+    pal:{H:"#161616",S:"#e0a877",E:"#2a2a2a",M:"#a8504a",C:"#262a33",G:"#111111",T:"#7a2020",W:"#f2efe6"},
+    glasses:true },
+  { name:"C", hair:[".H....H...H.",".HH..HH..HH.",".HHHHHHHHHH.",".HHHHHHHHHH."],
+    pal:{H:"#161616",S:"#f0bb8a",E:"#5a3a1e",M:"#b1524d",C:"#2f8f52",G:"#2b3252"} },
+  { name:"D", hair:[".H.HHHHHH.H.","HHHHHHHHHHHH",".HHHHHHHHHH.",".HHHHHHHHHH."],
+    pal:{H:"#dbe3f5",S:"#f4c79e",E:"#3d6ea8",M:"#b4585a",C:"#7b5fb0",G:"#2b3252"} }
+];
+function pixelAvatar(ch){
+  const bodyArr = ch.body || BODY;
+  let map = ch.hair.concat(bodyArr);
+  if(ch.glasses){ map = ch.hair.concat(GLASSES_ROWS, bodyArr.slice(2)); }
+  const w = map[0].length, h = map.length;
+  let rects = "";
+  map.forEach((row,y)=>{
+    [...row].forEach((c,x)=>{
+      if(c===".") return;
+      rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch.pal[c]||"#888"}"/>`;
+    });
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" role="img" aria-label="학생 ${ch.name}">${rects}</svg>`;
+}
+
+/* =========================================================
+   1a. 제목 옆 오리지널 엄지척 캐릭터 아이콘 (초록 스파이크 머리)
+   ========================================================= */
+const HERO_CELLS = [
+  {x:1,y:3,w:2,h:3,c:'S'},
+  {x:0,y:6,w:5,h:5,c:'S'},
+  {x:0,y:7,w:5,h:1,c:'D'},
+  {x:0,y:9,w:5,h:1,c:'D'},
+  {x:6,y:0,w:1,h:3,c:'H'},
+  {x:7,y:1,w:1,h:2,c:'H'},
+  {x:8,y:0,w:1,h:4,c:'H'},
+  {x:9,y:1,w:1,h:2,c:'H'},
+  {x:10,y:0,w:1,h:3,c:'H'},
+  {x:11,y:1,w:1,h:2,c:'H'},
+  {x:12,y:0,w:1,h:4,c:'H'},
+  {x:13,y:1,w:1,h:2,c:'H'},
+  {x:6,y:2,w:8,h:2,c:'H'},
+  {x:6,y:4,w:8,h:7,c:'S'},
+  {x:8,y:7,w:1,h:1,c:'E'},
+  {x:11,y:7,w:1,h:1,c:'E'},
+  {x:8,y:9,w:3,h:1,c:'M'}
+];
+const HERO_PAL = {H:'#2f8f52', S:'#f0bb8a', D:'#d99f72', E:'#201c18', M:'#8a3f3f'};
+function drawHero(){
+  const svg=document.getElementById("heroIcon");
+  if(!svg) return;
+  svg.innerHTML = HERO_CELLS.map(c=>
+    `<rect x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" fill="${HERO_PAL[c.c]}"/>`
+  ).join("");
+}
+
+/* =========================================================
+   1b. 궤도를 도는 물체용 픽셀 배구공 심볼 (원형 마스크 + 3방향 곡선 이음선)
+   ========================================================= */
+function buildBall(size){
+  const r = size/2 - 1, c = (size-1)/2;
+  const cells = [];
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      const dx=x-c, dy=y-c, d=Math.sqrt(dx*dx+dy*dy);
+      if(d > r+0.35) continue;
+      let type='W';
+      if(d > r-0.55){ type='K'; }
+      else{
+        const t = Math.max(-1, Math.min(1, dy/r));
+        const amp = Math.cos(t*Math.PI/2) * r * 0.86;
+        const phases = [0, 2*Math.PI/3, 4*Math.PI/3];
+        for(const p of phases){
+          const seamX = c + amp*Math.sin(p);
+          if(Math.abs(x-seamX) < 0.62){ type='K'; break; }
+        }
+      }
+      cells.push({x,y,type});
+    }
+  }
+  return cells;
+}
+const BALL_SIZE = 16;
+const BALL_CELLS = buildBall(BALL_SIZE);
+function ballSymbolMarkup(){
+  const rects = BALL_CELLS.map(cl=>
+    `<rect x="${cl.x}" y="${cl.y}" width="1" height="1" fill="${cl.type==='K'?'#3a2e22':'#fffaf2'}"/>`
+  ).join("");
+  return `<symbol id="pixelball" viewBox="0 0 ${BALL_SIZE} ${BALL_SIZE}">${rects}</symbol>`;
+}
+
+/* =========================================================
+   2. 보기 만들기 — 정답은 항상 ③번
+   ========================================================= */
+const NAMES = ["크라피카","레오리오","곤","키르아"];
+const SUBSETS = (()=>{
+  const out=[];
+  for(let size=1; size<=4; size++){
+    const rec=(start,cur)=>{
+      if(cur.length===size){ out.push(cur.slice()); return; }
+      for(let i=start;i<4;i++){ cur.push(i); rec(i+1,cur); cur.pop(); }
+    };
+    rec(0,[]);
+  }
+  return out;
+})();
+const key = a => a.join(",");
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const rint = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+
+function buildOptions(trueIdxs){
+  const pos = SUBSETS.findIndex(s=>key(s)===key(trueIdxs));
+  if(pos < 2 || pos > 12) return null;               // 앞 2개·뒤 2개 확보 필요
+  const ord = s => SUBSETS.findIndex(x=>key(x)===key(s));
+  const before = shuffle(SUBSETS.slice(0,pos)).slice(0,2).sort((a,b)=>ord(a)-ord(b));
+  const after  = shuffle(SUBSETS.slice(pos+1)).slice(0,2).sort((a,b)=>ord(a)-ord(b));
+  return [...before, trueIdxs, ...after];            // 정답이 3번째
+}
+
+/* =========================================================
+   3. 문제 상황 생성기 (모두 프린트의 등속원운동 개념 범위)
+   ========================================================= */
+const r2 = x => Math.round(x*100)/100;
+const fmt = x => { const v = Math.round(x*100)/100; return (Math.abs(v-Math.round(v))<1e-9) ? String(Math.round(v)) : v.toFixed(2).replace(/0$/,""); };
+function cmp(a,b){ const d=a-b; return Math.abs(d)<1e-9 ? "=" : (d>0 ? ">" : "<"); }
+function topic(w){                       // 받침에 맞춰 은/는
+  const c=w.charCodeAt(w.length-1)-0xAC00;
+  const hasFinal = (c>=0 && c<=11171) ? (c%28)!==0 : false;
+  return w + (hasFinal ? "은" : "는");
+}
+function cmpText(q,rel){
+  if(rel==="=") return `A와 B의 ${topic(q)} 서로 같아.`;
+  return rel===">" ? `A의 ${topic(q)} B보다 커.` : `A의 ${topic(q)} B보다 작아.`;
+}
+function wrongRel(rel){ return pick(["<",">","="].filter(r=>r!==rel)); }
+
+/* --- 상황 1: 같은 원판 위의 두 점 --- */
+function scenarioDisk(){
+  const T = pick([2,3,4,5]);
+  const k = pick([2,3]);
+  const rQ = pick([0.2,0.3,0.4,0.5]);
+  const rP = r2(rQ*k);
+  const w  = 2*Math.PI/T;
+  const wrongK = pick([1, k+1, k*k].filter(x=>x!==k));
+  const sts = [
+    { t:"P와 Q의 각속도는 서로 같아.",
+      f:"회전 반지름이 더 큰 P의 각속도가 Q보다 커.",
+      why:`P와 Q는 같은 원판에 고정돼 같은 시간에 같은 각을 돈다. 주기가 둘 다 ${T}초이므로 ω = 2π/T = ${fmt(w)} rad/s 로 서로 같다.` },
+    { t:`P의 속력은 Q의 속력의 ${k}배야.`,
+      f:`P의 속력은 Q의 속력의 ${wrongK}배야.`,
+      why:`v = rω 인데 ω가 같으므로 속력은 반지름에 비례한다. v<sub>P</sub>/v<sub>Q</sub> = r<sub>P</sub>/r<sub>Q</sub> = ${rP}/${rQ} = ${k}배.` },
+    { t:`구심 가속도의 크기는 P가 Q의 ${k}배야.`,
+      f:`구심 가속도의 크기는 P가 Q의 ${wrongK}배야.`,
+      why:`a = rω² 이고 ω가 같으므로 가속도도 반지름에 비례한다. a<sub>P</sub>/a<sub>Q</sub> = r<sub>P</sub>/r<sub>Q</sub> = ${k}배 (a<sub>P</sub> = ${fmt(rP*w*w)} m/s²).` },
+    { t:"P의 가속도 방향은 항상 원의 중심을 향해.",
+      f:"P의 속력이 일정하므로 P의 가속도는 0이야.",
+      why:`등속 원운동은 속력만 일정할 뿐 속도의 <b>방향</b>이 계속 바뀐다. 따라서 가속도가 있고, 그 방향은 항상 원의 중심을 향하는 구심 가속도다.` }
+  ];
+  return {
+    stem:`회전축을 중심으로 일정하게 도는 원판 위에, 중심에서 각각 ${rP} m, ${rQ} m 떨어진 두 점 P, Q가 원판에 고정되어 함께 등속 원운동을 한다. 원판이 한 바퀴 도는 데 걸리는 시간은 ${T}초이다.`,
+    given:[["회전 주기 T",`${T} s`],["r<sub>P</sub>",`${rP} m`],["r<sub>Q</sub>",`${rQ} m`]],
+    anim:{ systems:[{cx:160, cy:105, maxR:72, bodies:[
+      {rel:1, T, label:"P", color:"#f7a41d"},
+      {rel:1/k, T, label:"Q", color:"#6b5bd2", phase:0}
+    ], disk:true}]},
+    statements:sts,
+    concept:`같은 축에 고정되어 함께 도는 물체는 <b>주기 T와 각속도 ω가 같다</b>. 이때 v = rω, a = rω² 이므로 속력과 구심 가속도는 모두 회전 반지름에 비례한다.`
+  };
+}
+
+/* --- 상황 2: 반지름·주기가 다른 두 물체 --- */
+function scenarioTwo(){
+  let rA,rB,TA,TB,mA,mB;
+  do{
+    rA = pick([1,2,3,4]); rB = pick([1,2,3,4]);
+    TA = pick([2,3,4,6]); TB = pick([2,3,4,6]);
+    mA = pick([1,2,3]);  mB = pick([1,2,3]);
+  } while(rA===rB && TA===TB && mA===mB);
+  const wA=2*Math.PI/TA, wB=2*Math.PI/TB;
+  const vA=2*Math.PI*rA/TA, vB=2*Math.PI*rB/TB;
+  const aA=4*Math.PI*Math.PI*rA/(TA*TA), aB=4*Math.PI*Math.PI*rB/(TB*TB);
+  const FA=mA*aA, FB=mB*aB;
+  const mk=(q,x,y,why)=>{ const rel=cmp(x,y); return { t:cmpText(q,rel), f:cmpText(q,wrongRel(rel)), why }; };
+  const sts=[
+    mk("각속도의 크기", wA, wB,
+      `ω = 2π/T 이므로 주기가 짧을수록 각속도가 크다. ω<sub>A</sub> = 2π/${TA} ≈ ${fmt(wA)} rad/s, ω<sub>B</sub> = 2π/${TB} ≈ ${fmt(wB)} rad/s.`),
+    mk("속력", vA, vB,
+      `v = 2πr/T 이다. v<sub>A</sub> = 2π·${rA}/${TA} ≈ ${fmt(vA)} m/s, v<sub>B</sub> = 2π·${rB}/${TB} ≈ ${fmt(vB)} m/s.`),
+    mk("구심 가속도의 크기", aA, aB,
+      `a = v²/r = 4π²r/T² 이다. a<sub>A</sub> ≈ ${fmt(aA)} m/s², a<sub>B</sub> ≈ ${fmt(aB)} m/s².`),
+    mk("구심력의 크기", FA, FB,
+      `F = ma 이다. F<sub>A</sub> = ${mA}×${fmt(aA)} ≈ ${fmt(FA)} N, F<sub>B</sub> = ${mB}×${fmt(aB)} ≈ ${fmt(FB)} N.`)
+  ];
+  const mx=Math.max(rA,rB);
+  return {
+    stem:`마찰이 없는 수평면에서 물체 A는 반지름 ${rA} m인 원 궤도를, 물체 B는 반지름 ${rB} m인 원 궤도를 따라 각각 등속 원운동을 한다. A의 주기는 ${TA}초, B의 주기는 ${TB}초이고 질량은 각각 ${mA} kg, ${mB} kg이다.`,
+    given:[["A",`r=${rA} m, T=${TA} s, m=${mA} kg`],["B",`r=${rB} m, T=${TB} s, m=${mB} kg`]],
+    anim:{ systems:[
+      {cx:85, cy:105, maxR:62*rA/mx, bodies:[{rel:1, T:TA, label:"A", color:"#f7a41d"}]},
+      {cx:235, cy:105, maxR:62*rB/mx, bodies:[{rel:1, T:TB, label:"B", color:"#1aa7c8"}]}
+    ]},
+    statements:sts,
+    concept:`주기와 반지름이 서로 다르면 ω = 2π/T, v = 2πr/T, a = 4π²r/T², F = ma 를 각각 계산해 비교한다. 반지름이 크다고 항상 빠른 것도, 가속도가 큰 것도 아니다.`
+  };
+}
+
+/* --- 상황 3: 실로 추와 연결된 물체 --- */
+function scenarioString(){
+  let m,v,M,r;
+  do{ m=pick([1,2]); v=pick([2,3,4]); M=pick([1,2,3]); r=Math.round(m*v*v/M)/10; }
+  while(!(Number.isInteger(m*v*v/M) && r>=0.2 && r<=1.0));
+  const F=M*10;
+  const sts=[
+    { t:`A에 작용하는 구심력의 크기는 ${fmt(F)} N이야.`,
+      f:`A에 작용하는 구심력의 크기는 ${fmt(F*pick([0.5,2]))} N이야.`,
+      why:`F = mv²/r = ${m}×${v}²/${r} = ${fmt(F)} N. 이 힘은 실이 A를 당기는 장력이다.` },
+    { t:`추 B의 질량은 ${M} kg이야.`,
+      f:`추 B의 질량은 ${M+pick([1,2])} kg이야.`,
+      why:`추가 정지해 있으므로 장력 = 추의 무게 Mg. M = F/g = ${fmt(F)}/10 = ${M} kg.` },
+    pick([
+      { t:"A의 속력만 2배가 되면 필요한 구심력은 4배가 돼.",
+        f:"A의 속력만 2배가 되면 필요한 구심력은 2배가 돼.",
+        why:`F = mv²/r 에서 F는 v의 <b>제곱</b>에 비례한다. v가 2배면 F는 2² = 4배.` },
+      { t:"반지름만 2배가 되면 필요한 구심력은 절반이 돼.",
+        f:"반지름만 2배가 되면 필요한 구심력은 2배가 돼.",
+        why:`F = mv²/r 에서 v가 같다면 F는 r에 반비례한다. r이 2배면 F는 1/2배.` }
+    ]),
+    { t:"A에 작용하는 알짜힘은 항상 원의 중심을 향해.",
+      f:"A는 속력이 일정하므로 A에 작용하는 알짜힘은 0이야.",
+      why:`수평면에서 중력과 수직항력이 상쇄되고 남는 알짜힘은 실의 장력뿐이다. 이 장력이 곧 구심력이며 항상 중심을 향한다.` }
+  ];
+  const T=2*Math.PI*r/v;
+  return {
+    stem:`마찰이 없는 수평면 위에서 질량 ${m} kg인 물체 A가 반지름 ${r} m인 원 궤도를 따라 ${v} m/s의 일정한 속력으로 돈다. A는 수평면 중앙의 구멍을 지나는 실로 아래에 매달린 추 B와 연결되어 있고, 추 B는 정지해 있다. (중력 가속도는 10 m/s², 실과 물체의 크기는 무시)`,
+    given:[["m<sub>A</sub>",`${m} kg`],["r",`${r} m`],["v",`${v} m/s`],["g","10 m/s²"]],
+    anim:{ systems:[{cx:160, cy:88, maxR:62, hang:true, bodies:[{rel:1, T, label:"A", color:"#f7a41d"}]}]},
+    statements:sts,
+    concept:`등속 원운동을 유지하려면 중심 방향으로 F = mv²/r 의 구심력이 계속 필요하다. 여기서는 실의 장력이 구심력 역할을 하고, 그 크기는 매달린 추의 무게 Mg와 같다.`
+  };
+}
+
+const SCENARIOS=[scenarioDisk, scenarioTwo, scenarioString];
+
+/* =========================================================
+   4. 애니메이션
+   ========================================================= */
+let rafId=null;
+function drawStage(anim){
+  if(rafId) cancelAnimationFrame(rafId);
+  const host=document.getElementById("stage");
+  let defs=`<defs>
+    <marker id="ar" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+      <path d="M0,0 L5,2.5 L0,5 z" fill="#e0483c"/></marker>
+    <marker id="av" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+      <path d="M0,0 L5,2.5 L0,5 z" fill="#2bb3d6"/></marker>
+    ${ballSymbolMarkup()}
+  </defs>`;
+  let statics="", dyn=[];
+  anim.systems.forEach((sys,si)=>{
+    if(sys.disk){
+      statics+=`<circle cx="${sys.cx}" cy="${sys.cy}" r="${sys.maxR+10}" fill="rgba(120,140,200,.14)" stroke="#8b96bd" stroke-width="1.5"/>`;
+    }
+    if(sys.hang){
+      statics+=`<line x1="30" y1="${sys.cy}" x2="290" y2="${sys.cy}" stroke="#8b96bd" stroke-width="1" stroke-dasharray="3 3"/>`;
+      statics+=`<line x1="${sys.cx}" y1="${sys.cy}" x2="${sys.cx}" y2="${sys.cy+62}" stroke="#8b96bd" stroke-width="2"/>`;
+      statics+=`<rect x="${sys.cx-11}" y="${sys.cy+62}" width="22" height="16" fill="#6b5bd2" stroke="#2b3252" stroke-width="2"/>`;
+      statics+=`<text x="${sys.cx+18}" y="${sys.cy+75}" font-size="10" fill="#8b96bd">추 B</text>`;
+    }
+    sys.bodies.forEach((b,bi)=>{
+      const R=sys.maxR*b.rel;
+      statics+=`<circle cx="${sys.cx}" cy="${sys.cy}" r="${R}" fill="none" stroke="${b.color}" stroke-width="1.5" stroke-dasharray="4 4" opacity=".8"/>`;
+      statics+=`<circle cx="${sys.cx}" cy="${sys.cy}" r="2.5" fill="#8b96bd"/>`;
+      const id=`b${si}_${bi}`;
+      statics+=`<line id="${id}_rad" stroke="#8b96bd" stroke-width="1.2"/>
+        <line id="${id}_acc" stroke="#e0483c" stroke-width="2.4" marker-end="url(#ar)"/>
+        <line id="${id}_vel" stroke="#2bb3d6" stroke-width="2.4" marker-end="url(#av)"/>
+        <g id="${id}_dot">
+          <circle r="9" fill="${b.color}" opacity=".22"/>
+          <g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.6s" repeatCount="indefinite"/>
+            <use href="#pixelball" x="-7" y="-7" width="14" height="14"/>
+          </g>
+          <text x="11" y="4" font-size="12" font-family="Jua, sans-serif" fill="${b.color}">${b.label}</text>
+        </g>`;
+      dyn.push({id, cx:sys.cx, cy:sys.cy, R, T:b.T, phase:(b.phase!==undefined?b.phase:Math.random()*6.28)});
+    });
+  });
+  host.innerHTML=`<svg viewBox="0 0 320 ${anim.systems.some(s=>s.hang)?200:210}" xmlns="http://www.w3.org/2000/svg">${defs}${statics}</svg>`;
+  const nodes=dyn.map(d=>({...d,
+    rad:document.getElementById(d.id+"_rad"),
+    acc:document.getElementById(d.id+"_acc"),
+    vel:document.getElementById(d.id+"_vel"),
+    dot:document.getElementById(d.id+"_dot")}));
+  const slow=0.65, t0=performance.now();
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function frame(t){
+    const el=(t-t0)/1000;
+    nodes.forEach(n=>{
+      const th = reduce ? n.phase : (2*Math.PI*el/(n.T*slow) + n.phase);
+      const x=n.cx+n.R*Math.cos(th), y=n.cy+n.R*Math.sin(th);
+      n.rad.setAttribute("x1",n.cx); n.rad.setAttribute("y1",n.cy);
+      n.rad.setAttribute("x2",x);    n.rad.setAttribute("y2",y);
+      n.acc.setAttribute("x1",x); n.acc.setAttribute("y1",y);
+      n.acc.setAttribute("x2",x-Math.cos(th)*Math.min(26,n.R*0.55));
+      n.acc.setAttribute("y2",y-Math.sin(th)*Math.min(26,n.R*0.55));
+      n.vel.setAttribute("x1",x); n.vel.setAttribute("y1",y);
+      n.vel.setAttribute("x2",x-Math.sin(th)*26);
+      n.vel.setAttribute("y2",y+Math.cos(th)*26);
+      n.dot.setAttribute("transform",`translate(${x},${y})`);
+    });
+    if(!reduce) rafId=requestAnimationFrame(frame);
+  }
+  rafId=requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   5. 문제 진행
+   ========================================================= */
+let state={ problem:null, picked:null, locked:false, n:0, tries:0, hits:0, streak:0 };
+
+function makeProblem(){
+  for(let i=0;i<300;i++){
+    const sc=pick(SCENARIOS)();
+    sc.statements=shuffle(sc.statements);
+    const flags=sc.statements.map(()=>Math.random()<0.5);
+    const trueIdxs=flags.map((f,i)=>f?i:-1).filter(i=>i>=0);
+    if(!trueIdxs.length) continue;
+    const opts=buildOptions(trueIdxs);
+    if(!opts) continue;
+    return {sc, flags, trueIdxs, opts};
+  }
+  return null;
+}
+
+const CIRC=["①","②","③","④","⑤"];
+function render(){
+  const p=state.problem, sc=p.sc;
+  document.getElementById("qtag").textContent=`문제 ${state.n}`;
+  document.getElementById("stem").innerHTML=sc.stem;
+  document.getElementById("given").innerHTML=sc.given.map(g=>`<span>${g[0]} = <b>${g[1]}</b></span>`).join("");
+  drawStage(sc.anim);
+
+  document.getElementById("students").innerHTML=sc.statements.map((s,i)=>{
+    const text = p.flags[i] ? s.t : s.f;
+    return `<div class="student">
+      <div class="avatar">${pixelAvatar(CHARS[i])}<span class="nm">${NAMES[i]}</span></div>
+      <div class="bubble" id="bub${i}">${text}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("opts").innerHTML=p.opts.map((o,i)=>
+    `<button class="opt" type="button" aria-pressed="false" data-i="${i}">
+       <span class="num">${CIRC[i]}</span><span>${o.map(x=>NAMES[x]).join(", ")}</span>
+     </button>`).join("");
+  document.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>select(+b.dataset.i)));
+
+  document.getElementById("numInput").value="";
+  document.getElementById("checkBtn").disabled=true;
+  document.getElementById("checkBtn").textContent="정답 확인";
+  document.getElementById("feedback").className="";
+  state.picked=null; state.locked=false;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function select(i){
+  if(state.locked) return;
+  state.picked=i;
+  document.querySelectorAll(".opt").forEach(b=>b.setAttribute("aria-pressed", (+b.dataset.i===i)?"true":"false"));
+  document.getElementById("numInput").value=i+1;
+  document.getElementById("checkBtn").disabled=false;
+}
+
+function check(){
+  if(state.locked || state.picked===null) return;
+  state.locked=true;
+  const p=state.problem, ok = (state.picked===2);   // 정답은 항상 ③
+  state.tries++; if(ok){ state.hits++; state.streak++; } else state.streak=0;
+  document.getElementById("tries").textContent=state.tries;
+  document.getElementById("hits").textContent=state.hits;
+  document.getElementById("streak").textContent=state.streak;
+  saveScore();
+
+  document.querySelectorAll(".opt").forEach(b=>{
+    const i=+b.dataset.i;
+    b.disabled=true;
+    if(i===2) b.classList.add("right");
+    else if(i===state.picked) b.classList.add("wrong");
+  });
+  document.getElementById("checkBtn").disabled=true;
+
+  p.sc.statements.forEach((s,i)=>{
+    const bub=document.getElementById("bub"+i);
+    bub.classList.add(p.flags[i] ? "mark-o" : "mark-x");
+    bub.innerHTML=`<span class="verdict ${p.flags[i]?"o":"x"}">${p.flags[i]?"옳음 O":"틀림 X"}</span><br>${bub.innerHTML}`;
+  });
+
+  const res=document.getElementById("result");
+  res.className="result "+(ok?"o":"x");
+  res.textContent = ok ? "정답이야! 이유까지 확인하고 넘어가자." : `아쉽다. 정답은 ③ ${p.opts[2].map(x=>NAMES[x]).join(", ")} 야.`;
+
+  document.getElementById("marks").innerHTML =
+    `<p class="note">옳게 말한 학생: <b>${p.trueIdxs.map(x=>NAMES[x]).join(", ")}</b></p>`;
+
+  document.getElementById("solve").innerHTML =
+    `<h3>풀이</h3>` +
+    p.sc.statements.map((s,i)=>
+      `<p class="line"><span class="who">${NAMES[i]}</span> · ${p.flags[i]?"옳다":"틀렸다"}<br>${s.why}</p>`).join("") +
+    `<h3>오늘의 정리</h3><p class="line">${p.sc.concept}</p>
+     <div class="formula">ω = 2π/T = 2πf</div>
+     <div class="formula">v = rω = 2πr/T</div>
+     <div class="formula">a = v²/r = rω² = 4π²r/T²</div>
+     <div class="formula">F = ma = mv²/r = mrω²</div>`;
+
+  const fb=document.getElementById("feedback");
+  fb.className="show";
+  fb.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function nextProblem(){
+  const p=makeProblem();
+  if(!p) return;
+  state.problem=p; state.n++;
+  render();
+}
+
+/* 점수 저장 (실패해도 문제없이 동작) */
+function saveScore(){
+  try{ localStorage.setItem("uc-quiz", JSON.stringify({t:state.tries,h:state.hits,s:state.streak})); }catch(e){}
+}
+function loadScore(){
+  try{
+    const d=JSON.parse(localStorage.getItem("uc-quiz")||"null");
+    if(d){ state.tries=d.t||0; state.hits=d.h||0; state.streak=d.s||0;
+      document.getElementById("tries").textContent=state.tries;
+      document.getElementById("hits").textContent=state.hits;
+      document.getElementById("streak").textContent=state.streak; }
+  }catch(e){}
+}
+
+document.getElementById("checkBtn").addEventListener("click", check);
+document.getElementById("newBtn").addEventListener("click", nextProblem);
+document.getElementById("numInput").addEventListener("input", e=>{
+  const v=parseInt(e.target.value,10);
+  if(v>=1 && v<=5) select(v-1);
+});
+document.getElementById("shareBtn").addEventListener("click", async e=>{
+  const url=location.href;
+  try{
+    if(navigator.share){ await navigator.share({title:"등속 원운동 연습기", url}); }
+    else { await navigator.clipboard.writeText(url); e.target.textContent="복사 완료"; setTimeout(()=>e.target.textContent="링크 복사",1500); }
+  }catch(err){ e.target.textContent="복사 실패"; setTimeout(()=>e.target.textContent="링크 복사",1500); }
+});
+
+loadScore();
+drawHero();
+nextProblem();
+</script>
+</body>
+</html>

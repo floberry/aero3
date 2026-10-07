@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>벡터 도장 — 힘의 합성 훈련</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-dark:#1c1712;
+    --wood:#2b2118;
+    --wood-light:#3a2c1f;
+    --paper:#f3ede1;
+    --paper-line:#d9cdb4;
+    --ink:#2a2420;
+    --ink-soft:#6b6055;
+    --gold:#d4a017;
+    --gold-bright:#e8c547;
+    --green:#3f8f5f;
+    --red:#c4483a;
+    --blue:#3e7cb1;
+    --black-belt:#1a1a1a;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at top, var(--wood-light) 0%, var(--wood) 45%, var(--wood-dark) 100%);
+    font-family:'Noto Sans KR', sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:18px 10px 40px;
+  }
+
+  .mat{
+    width:100%;
+    max-width:430px;
+    background:var(--paper);
+    border-radius:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.03) inset;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .mat::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size:24px 24px;
+    opacity:.35;
+  }
+
+  header{
+    position:relative;
+    background:linear-gradient(135deg, var(--wood-dark), var(--wood));
+    color:var(--paper);
+    padding:16px 18px 20px;
+    border-bottom:4px solid var(--gold);
+  }
+
+  .dojo-title{
+    font-family:'Black Han Sans', sans-serif;
+    font-size:22px;
+    letter-spacing:1px;
+    margin:0 0 2px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dojo-title span.sub{
+    font-family:'Noto Sans KR',sans-serif;
+    font-weight:500;
+    font-size:12px;
+    color:#c9b998;
+    letter-spacing:0;
+  }
+
+  .stat-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+    gap:10px;
+  }
+
+  .belt-badge{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:13px;
+  }
+  .belt-swatch{
+    width:16px;height:16px;border-radius:4px;
+    box-shadow:0 0 0 2px rgba(0,0,0,.3) inset;
+    flex-shrink:0;
+  }
+  .belt-name{font-weight:700;}
+
+  .fire-combo{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:999px;
+    padding:6px 12px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:transform .2s;
+  }
+  .fire-combo.pop{ transform:scale(1.15); }
+
+  .score-line{
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:#b9ab8c;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  .progress-track{
+    margin-top:8px;
+    height:6px;
+    background:rgba(255,255,255,.1);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--gold-bright));
+    width:0%;
+    transition:width .5s ease;
+  }
+
+  main{
+    position:relative;
+    padding:20px 18px 24px;
+  }
+
+  .q-tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    background:#e8dfc9;
+    border:1px solid var(--paper-line);
+    padding:3px 9px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+
+  .q-text{
+    font-size:14.5px;
+    line-height:1.65;
+    margin:0 0 14px;
+  }
+  .q-text b{color:var(--ink);}
+
+  .diagram-card{
+    background:#fffdf8;
+    border:1px solid var(--paper-line);
+    border-radius:12px;
+    padding:8px;
+    margin-bottom:16px;
+    box-shadow:0 2px 0 var(--paper-line);
+  }
+
+  .q-ask{
+    text-align:center;
+    font-weight:700;
+    font-size:15.5px;
+    margin:0 0 16px;
+  }
+
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    margin-bottom:16px;
+  }
+
+  .opt-btn{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    text-align:left;
+    padding:13px 14px;
+    border-radius:10px;
+    border:2px solid var(--paper-line);
+    background:#fffdf8;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .15s, background .15s, transform .1s;
+  }
+  .opt-btn:hover:not(:disabled){
+    border-color:var(--gold);
+    background:#fbf4de;
+  }
+  .opt-btn:active:not(:disabled){ transform:scale(.98); }
+  .opt-btn:disabled{ cursor:default; }
+
+  .opt-num{
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--wood);
+    color:var(--paper);
+    font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+
+  .opt-btn.correct{
+    border-color:var(--green);
+    background:#e5f4ea;
+  }
+  .opt-btn.correct .opt-num{ background:var(--green); }
+
+  .opt-btn.wrong{
+    border-color:var(--red);
+    background:#fbe9e6;
+    animation:shake .35s;
+  }
+  .opt-btn.wrong .opt-num{ background:var(--red); }
+
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    75%{transform:translateX(6px);}
+  }
+
+  .action-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:6px;
+  }
+
+  .act-btn{
+    flex:1;
+    padding:12px 10px;
+    border-radius:10px;
+    border:none;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition:filter .15s, transform .1s;
+  }
+  .act-btn:active{ transform:scale(.97); }
+
+  .hint-btn{
+    background:#efe3c2;
+    color:#7a5b12;
+    border:1px solid #d9c48a;
+  }
+  .hint-btn:hover{ filter:brightness(1.05); }
+
+  .new-btn{
+    background:var(--wood);
+    color:var(--paper);
+  }
+  .new-btn:hover{ filter:brightness(1.15); }
+
+  .hint-box{
+    display:none;
+    background:#fff6df;
+    border:1px dashed #d9b45c;
+    border-radius:10px;
+    padding:11px 13px;
+    font-size:13px;
+    line-height:1.55;
+    margin-bottom:6px;
+    color:#6b4f0e;
+  }
+  .hint-box.show{ display:block; }
+
+  .feedback{
+    display:none;
+    margin-top:14px;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--paper-line);
+  }
+  .feedback.show{ display:block; animation:unroll .35s ease; }
+  @keyframes unroll{
+    from{ opacity:0; transform:translateY(-8px) scaleY(.96); transform-origin:top;}
+    to{ opacity:1; transform:translateY(0) scaleY(1);}
+  }
+
+  .fb-head{
+    padding:12px 14px;
+    font-weight:900;
+    font-family:'Black Han Sans', sans-serif;
+    font-size:16px;
+    letter-spacing:.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .fb-head.ok{ background:var(--green); color:#fff; }
+  .fb-head.no{ background:var(--red); color:#fff; }
+
+  .fb-body{
+    background:#fffdf8;
+    padding:14px;
+  }
+
+  .step{
+    display:flex;
+    gap:10px;
+    margin-bottom:11px;
+    font-size:13.5px;
+    line-height:1.6;
+  }
+  .step:last-child{ margin-bottom:0; }
+  .step-num{
+    flex-shrink:0;
+    width:20px;height:20px;
+    border-radius:50%;
+    background:var(--wood);
+    color:var(--paper);
+    font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .formula{
+    font-family:'IBM Plex Mono', monospace;
+    background:#f0ebdd;
+    padding:6px 9px;
+    border-radius:6px;
+    display:inline-block;
+    margin-top:3px;
+    font-size:13px;
+  }
+
+  .fb-msg{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--paper-line);
+    font-size:13.5px;
+    font-weight:600;
+  }
+
+  .stats-footer{
+    padding:12px 18px 18px;
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--paper-line);
+  }
+
+  .burst{
+    position:fixed;
+    pointer-events:none;
+    font-size:20px;
+    animation:fly 0.9s ease-out forwards;
+    z-index:50;
+  }
+  @keyframes fly{
+    0%{ transform:translateY(0) scale(.6) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(-90px) scale(1.3) rotate(30deg); opacity:0; }
+  }
+
+  .levelup-toast{
+    position:fixed;
+    left:50%; top:14px;
+    transform:translateX(-50%) translateY(-60px);
+    background:var(--wood-dark);
+    color:var(--gold-bright);
+    border:2px solid var(--gold);
+    padding:10px 20px;
+    border-radius:999px;
+    font-family:'Black Han Sans', sans-serif;
+    font-size:14px;
+    z-index:100;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .levelup-toast.show{ transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="mat">
+  <header>
+    <p class="dojo-title">🥋 벡터 도장 <span class="sub">힘의 합성 훈련</span></p>
+    <div class="stat-row">
+      <div class="belt-badge">
+        <span class="belt-swatch" id="beltSwatch"></span>
+        <span class="belt-name" id="beltName">하양 띠</span>
+      </div>
+      <div class="fire-combo" id="fireCombo">🔥 0연승</div>
+    </div>
+    <div class="score-line">
+      <span id="scoreText">점수 0</span>
+      <span id="beltNext">다음 승급까지 3문제</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </header>
+
+  <main>
+    <span class="q-tag" id="qTag">문제 01 · 물리학2 · 힘의 합성</span>
+    <p class="q-text">
+      그림은 <i>xy</i>평면상의 힘 <b>F₁</b>, <b>F₂</b>를 나타낸 것이다.
+      <b>F₁</b>, <b>F₂</b>의 크기는 각각 <b id="f1Val">30</b>N, <b id="f2Val">40</b>N이다.
+    </p>
+
+    <div class="diagram-card">
+      <svg id="diagram" viewBox="0 0 260 200" width="100%" height="200"></svg>
+    </div>
+
+    <p class="q-ask">F₁ + F₂ 의 크기는?</p>
+
+    <div class="options" id="options"></div>
+
+    <div class="hint-box" id="hintBox"></div>
+
+    <div class="action-row">
+      <button class="act-btn hint-btn" id="hintBtn">💡 힌트</button>
+      <button class="act-btn new-btn" id="newBtn">🔄 새 문제</button>
+    </div>
+
+    <div class="feedback" id="feedback">
+      <div class="fb-head" id="fbHead"></div>
+      <div class="fb-body" id="fbBody"></div>
+    </div>
+  </main>
+
+  <div class="stats-footer">
+    <span id="statAttempts">시도 0회</span>
+    <span id="statAcc">정확도 —</span>
+    <span id="statBest">최고 연승 0</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- 상태 ----------
+  let state = {
+    score: 0,
+    streak: 0,
+    bestStreak: 0,
+    totalCorrect: 0,
+    attempts: 0,
+    hintStage: 0,
+    answered: false,
+    lastPoolIndex: -1
+  };
+
+  const BELTS = [
+    {name:'하양 띠', color:'#f2efe6', need:0},
+    {name:'노랑 띠', color:'#e8c547', need:3},
+    {name:'초록 띠', color:'#3f8f5f', need:6},
+    {name:'파랑 띠', color:'#3e7cb1', need:10},
+    {name:'빨강 띠', color:'#c4483a', need:15},
+    {name:'검은 띠', color:'#1a1a1a', need:20},
+  ];
+
+  // (F1 세로, F2 가로, 합력) 피타고라스 삼중값 풀 — 정수 정답 보장
+  const POOL = [
+    [30,40,50],[40,30,50],
+    [60,80,100],[80,60,100],
+    [45,60,75],[60,45,75],
+    [25,60,65],[60,25,65],
+    [40,75,85],[75,40,85],
+    [20,15,25],[15,20,25],
+    [21,28,35],[28,21,35],
+    [24,32,40],[32,24,40],
+    [36,48,60],[48,36,60],
+    [15,36,39],[36,15,39],
+    [27,36,45],[36,27,45]
+  ];
+
+  const HINT_MSGS = [
+    '그림을 보면 F₁은 y축 방향, F₂는 x축 방향을 향하고 있어요. 두 벡터가 이루는 각도가 힌트예요 — 몇 도일까요?',
+    '두 힘이 서로 수직(90˚)일 때는 피타고라스 정리를 그대로 쓸 수 있어요.<br><span class="formula">F = √(F₁² + F₂²)</span> 이 식에 숫자를 대입해보세요!'
+  ];
+
+  const CORRECT_MSGS = [
+    '깔끔한 한 판승입니다! 수직인 두 힘의 합성, 완벽하게 익히셨네요 🥋',
+    '정확한 발차기였어요! 피타고라스 정리를 정확히 적용하셨습니다.',
+    '도장 격파 성공! 이 유형은 이제 눈 감고도 풀 수 있겠어요.'
+  ];
+  const WRONG_MSGS = [
+    '아직 기본기를 조금 더 다질 때예요. 아래 풀이로 다시 자세를 잡아봐요.',
+    '괜찮아요, 모든 유단자도 낙법부터 배웠답니다. 풀이를 보고 다시 도전해봐요!',
+    '한 끗 차이로 아쉬웠어요. 힘의 방향 관계를 다시 한번 확인해봐요.'
+  ];
+
+  let current = null;
+
+  // ---------- 유틸 ----------
+  function pickTriple(){
+    let idx;
+    do{ idx = Math.floor(Math.random()*POOL.length); }
+    while(idx === state.lastPoolIndex && POOL.length>1);
+    state.lastPoolIndex = idx;
+    return POOL[idx];
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function buildOptions(a,b,c){
+    let vals = [c, a+b, Math.max(a,b), Math.min(a,b)];
+    let extras = [c+10, Math.abs(c-10), 2*Math.min(a,b), Math.abs(a-b), c+20, a+b+15, c+30];
+    let set = [];
+    for(const v of vals){ if(v>0 && !set.includes(v)) set.push(v); }
+    for(const v of extras){
+      if(set.length>=5) break;
+      if(v>0 && !set.includes(v)) set.push(v);
+    }
+    let filler = c+40;
+    while(set.length<5){
+      if(!set.includes(filler)) set.push(filler);
+      filler += 9;
+    }
+    set = set.slice(0,5);
+    const order = shuffle(set);
+    return { options: order, correctIndex: order.indexOf(c) };
+  }
+
+  // ---------- 다이어그램 ----------
+  function drawDiagram(a,b){
+    const svg = document.getElementById('diagram');
+    const originX = 45, originY = 165;
+    const maxLen = 130;
+    const scale = v => 30 + Math.min(v,100)/100*maxLen*0.75;
+    const f1Len = scale(a);
+    const f2Len = scale(b);
+
+    let grid = '';
+    for(let x=originX; x<=250; x+=22){
+      grid += `<line x1="${x}" y1="20" x2="${x}" y2="${originY}" stroke="#e7ddc4" stroke-width="1"/>`;
+    }
+    for(let y=originY; y>=20; y-=22){
+      grid += `<line x1="${originX}" y1="${y}" x2="250" y2="${y}" stroke="#e7ddc4" stroke-width="1"/>`;
+    }
+
+    const svgContent = `
+      ${grid}
+      <line x1="${originX}" y1="${originY}" x2="250" y2="${originY}" stroke="#4a4033" stroke-width="1.6"/>
+      <polygon points="250,${originY} 242,${originY-4} 242,${originY+4}" fill="#4a4033"/>
+      <text x="253" y="${originY+4}" font-size="11" fill="#4a4033" font-style="italic">x</text>
+
+      <line x1="${originX}" y1="${originY}" x2="${originX}" y2="18" stroke="#4a4033" stroke-width="1.6"/>
+      <polygon points="${originX},18 ${originX-4},26 ${originX+4},26" fill="#4a4033"/>
+      <text x="${originX-5}" y="14" font-size="11" fill="#4a4033" font-style="italic">y</text>
+
+      <text x="${originX-14}" y="${originY+14}" font-size="10" fill="#6b6055">O</text>
+
+      <line x1="${originX}" y1="${originY}" x2="${originX}" y2="${originY-f1Len}" stroke="#c4483a" stroke-width="3"/>
+      <polygon points="${originX},${originY-f1Len-9} ${originX-5},${originY-f1Len+2} ${originX+5},${originY-f1Len+2}" fill="#c4483a"/>
+      <text x="${originX-24}" y="${originY-f1Len/2}" font-size="13" fill="#c4483a" font-weight="700" font-style="italic">F₁</text>
+
+      <line x1="${originX}" y1="${originY}" x2="${originX+f2Len}" y2="${originY}" stroke="#3e7cb1" stroke-width="3"/>
+      <polygon points="${originX+f2Len+9},${originY} ${originX+f2Len-2},${originY-5} ${originX+f2Len-2},${originY+5}" fill="#3e7cb1"/>
+      <text x="${originX+f2Len/2-6}" y="${originY+18}" font-size="13" fill="#3e7cb1" font-weight="700" font-style="italic">F₂</text>
+    `;
+    svg.innerHTML = svgContent;
+  }
+
+  // ---------- 벨트/진행도 ----------
+  function currentBeltIndex(){
+    let idx = 0;
+    for(let i=0;i<BELTS.length;i++){ if(state.totalCorrect >= BELTS[i].need) idx = i; }
+    return idx;
+  }
+
+  function renderBelt(prevIdx){
+    const idx = currentBeltIndex();
+    const belt = BELTS[idx];
+    document.getElementById('beltSwatch').style.background = belt.color;
+    document.getElementById('beltName').textContent = belt.name;
+
+    const next = BELTS[idx+1];
+    const nextEl = document.getElementById('beltNext');
+    const fill = document.getElementById('progressFill');
+    if(next){
+      const need = next.need - belt.need;
+      const have = state.totalCorrect - belt.need;
+      nextEl.textContent = `다음 승급까지 ${next.need - state.totalCorrect}문제`;
+      fill.style.width = Math.min(100, (have/need)*100) + '%';
+    } else {
+      nextEl.textContent = '최고 단계 달성!';
+      fill.style.width = '100%';
+    }
+
+    if(prevIdx !== undefined && idx > prevIdx){
+      const toast = document.createElement('div');
+      toast.className = 'levelup-toast';
+      toast.textContent = `🎉 승급! ${belt.name} 획득`;
+      document.body.appendChild(toast);
+      requestAnimationFrame(()=> toast.classList.add('show'));
+      setTimeout(()=>{
+        toast.classList.remove('show');
+        setTimeout(()=> toast.remove(), 400);
+      }, 1800);
+    }
+  }
+
+  function renderStats(){
+    document.getElementById('scoreText').textContent = `점수 ${state.score}`;
+    document.getElementById('fireCombo').textContent = `🔥 ${state.streak}연승`;
+    document.getElementById('statAttempts').textContent = `시도 ${state.attempts}회`;
+    const acc = state.attempts ? Math.round((state.totalCorrect/state.attempts)*100) : null;
+    document.getElementById('statAcc').textContent = acc===null ? '정확도 —' : `정확도 ${acc}%`;
+    document.getElementById('statBest').textContent = `최고 연승 ${state.bestStreak}`;
+  }
+
+  function popCombo(){
+    const el = document.getElementById('fireCombo');
+    el.classList.add('pop');
+    setTimeout(()=> el.classList.remove('pop'), 220);
+  }
+
+  function burstEmoji(fromEl, emoji){
+    const rect = fromEl.getBoundingClientRect();
+    for(let i=0;i<5;i++){
+      const s = document.createElement('div');
+      s.className = 'burst';
+      s.textContent = emoji;
+      s.style.left = (rect.left + rect.width/2 + (Math.random()*60-30)) + 'px';
+      s.style.top = (rect.top + rect.height/2) + 'px';
+      document.body.appendChild(s);
+      setTimeout(()=> s.remove(), 950);
+    }
+  }
+
+  // ---------- 문제 생성 ----------
+  function newProblem(){
+    const [a,b,c] = pickTriple();
+    const {options, correctIndex} = buildOptions(a,b,c);
+    current = {a,b,c,options,correctIndex};
+    state.answered = false;
+    state.hintStage = 0;
+
+    document.getElementById('f1Val').textContent = a;
+    document.getElementById('f2Val').textContent = b;
+    document.getElementById('qTag').textContent = `문제 ${String(state.attempts+1).padStart(2,'0')} · 물리학2 · 힘의 합성`;
+    drawDiagram(a,b);
+
+    const optWrap = document.getElementById('options');
+    optWrap.innerHTML = '';
+    const circleNums = ['①','②','③','④','⑤'];
+    options.forEach((val, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = `<span class="opt-num">${i+1}</span> ${circleNums[i]} ${val} N`;
+      btn.addEventListener('click', () => selectAnswer(i, btn));
+      optWrap.appendChild(btn);
+    });
+
+    document.getElementById('hintBox').classList.remove('show');
+    document.getElementById('hintBox').innerHTML = '';
+    document.getElementById('feedback').classList.remove('show');
+  }
+
+  // ---------- 힌트 ----------
+  document.getElementById('hintBtn').addEventListener('click', () => {
+    if(state.hintStage >= HINT_MSGS.length){
+      const box = document.getElementById('hintBox');
+      box.innerHTML = '이미 최대 힌트를 다 사용했어요. 이제 직접 풀어볼 시간!';
+      box.classList.add('show');
+      return;
+    }
+    const box = document.getElementById('hintBox');
+    box.innerHTML = `힌트 ${state.hintStage+1} · ${HINT_MSGS[state.hintStage]}`;
+    box.classList.add('show');
+    state.hintStage++;
+  });
+
+  // ---------- 새 문제 ----------
+  document.getElementById('newBtn').addEventListener('click', newProblem);
+
+  // ---------- 정답 선택 ----------
+  function selectAnswer(i, btn){
+    if(state.answered) return;
+    state.answered = true;
+    state.attempts++;
+
+    const isCorrect = i === current.correctIndex;
+    const prevBeltIdx = currentBeltIndex();
+
+    const allBtns = document.querySelectorAll('.opt-btn');
+    allBtns.forEach(b => b.disabled = true);
+
+    if(isCorrect){
+      btn.classList.add('correct');
+      const gained = state.hintStage > 0 ? 5 : 10;
+      state.score += gained;
+      state.streak++;
+      state.bestStreak = Math.max(state.bestStreak, state.streak);
+      state.totalCorrect++;
+      popCombo();
+      burstEmoji(btn, '⭐');
+    } else {
+      btn.classList.add('wrong');
+      allBtns[current.correctIndex].classList.add('correct');
+      state.streak = 0;
+    }
+
+    renderBelt(prevBeltIdx);
+    renderStats();
+    showFeedback(isCorrect);
+  }
+
+  function showFeedback(isCorrect){
+    const {a,b,c} = current;
+    const head = document.getElementById('fbHead');
+    const body = document.getElementById('fbBody');
+    head.className = 'fb-head ' + (isCorrect ? 'ok' : 'no');
+    head.innerHTML = isCorrect ? '✅ 정답! 도장 격파' : '❌ 아쉬워요, 다시 자세를 잡아봐요';
+
+    const msg = isCorrect
+      ? CORRECT_MSGS[Math.floor(Math.random()*CORRECT_MSGS.length)]
+      : WRONG_MSGS[Math.floor(Math.random()*WRONG_MSGS.length)];
+
+    body.innerHTML = `
+      <div class="step">
+        <span class="step-num">1</span>
+        <span>그림에서 F₁은 y축 방향, F₂는 x축 방향이므로 두 힘은 서로 <b>수직(90˚)</b>입니다.</span>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <span>수직인 두 벡터의 합성 크기는 피타고라스 정리로 구합니다.<br>
+        <span class="formula">F = √(F₁² + F₂²)</span></span>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <span>값을 대입하면<br>
+        <span class="formula">F = √(${a}² + ${b}²) = √(${a*a} + ${b*b}) = √${a*a+b*b} = ${c} N</span></span>
+      </div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <span>따라서 <b>F₁ + F₂ 의 크기는 ${c} N</b> 입니다.</span>
+      </div>
+      <div class="fb-msg">${msg}</div>
+    `;
+    document.getElementById('feedback').classList.add('show');
+  }
+
+  // ---------- 초기화 ----------
+  renderBelt();
+  renderStats();
+  newProblem();
+})();
+</script>
+</body>
+</html>
